@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- This is where metadata goes-->
+    <title>Learning basic HTML</title>
+    <meta name="Random stuff" content="yeah probably" />
+  </head>
+  <body>
+    <!-- This is where visible content goes-->
+    <img src="grape.jpg" width="200" height="200" alt="Minimalist grape logo" />
+    <h1><em>great title</em></h1>
+    <!-- I note that italics and em look the same visually. What's the difference? (Later) Ah. Accessibility.-->
+    <h2>great subtitle</h2>
+    content goes here
+    <p>this is a paragraph</p>
+    <p>This is how you do <strong>bold/strong</strong></p>
+
+    <p>Let's add some sections</p>
+    <section>
+      <h2>Here is my first section title</h2>
+      <p>I would like to add a list.</p>
+      <ul>
+        <li>first item</li>
+        <li>second</li>
+        <li>third</li>
+      </ul>
+      <!-- <li>, not <i>. Got it-->
+      <ol>
+        <li>first ordered item</li>
+        <li>second</li>
+        <li>third</li>
+      </ol>
+      I wonder if I can make them Roman numerals. Let me check the docs.
+      <ol type="i">
+        <li>first ordered item</li>
+        <li>second</li>
+        <li>third</li>
+      </ol>
+      Yep. Got it.
+      <p>They're talking about newlines now. Let's...<br />try it.</p>
+      <p>
+        Now it's talking about links. To follow a link, <a href="link.html"
+        >click here</a>. I have to say, HTML really sucks to write by hand.
+        Should've been a Lisp.
+      </p>
+      <p>
+        Let's add a logo. I'm eating grapes right now so let's so you know how
+        it be. Oh my god it's huge. Shrinking time.
+      </p>
+      <p>
+        A video. I don't want to download one so let's try to get it remote.<p>
+          <video src="https://youtu.be/FQdaUv95mR8" width="480"></video>
+        </p>
+      </p>
+      <p>A table</p>
+      <p>
+        <table border="1">
+          <tr>
+            <th>x</th>
+            <th>x<sup>2</sup></th>
+          </tr>
+          <tr>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>4</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>9</td>
+          </tr>
+        </table>
+      </p>
+      <p>
+        Now input forms.
+        <form>
+          Grapes?
+          <input
+            name="grapes"
+            type="radio"
+            id="yay grapes"
+          />
+          <label for="yay grapes">Definitely</label>
+          <input
+            name="grapes"
+            type="radio"
+            id="ew grapes"
+          />
+          <label for="ew grapes">Ew</label>
+        </form>
+      </p>
+    </section>
+  </body>
+</html>
