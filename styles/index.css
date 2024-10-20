@@ -1,13 +1,43 @@
 * {
-    font-family: "Helvetica Neue", Helvetica, Arial,  sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 h1 {
-    color: rgb(0, 0, 255);
+  color: rgb(0, 0, 255);
+}
+
+.wrap-div {
+  margin: auto;
+  width: 80%;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  padding-left: 1em;
+  padding-right: 1em;
+  /* background-color: antiquewhite; */
 }
 
 a {
-    text-decoration-style: wavy;
-    text-decoration-thickness: 6%;
-    color: darkorchid;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 6%;
+  color: darkorchid;
+}
+
+a:hover {
+  color: rgb(255, 58, 163);
+}
+#unclickable-link:active {
+  display: none;
+}
+a:nth-child(2n) {
+  background-color: rgb(203, 255, 255);
+}
+
+.display-props-colored {
+  background-color: rgb(245, 135, 135);
+}
+
+#ib-div {
+  background-color: rgb(255, 175, 2);
+  display: inline-block;
+  height: 2em;
 }
