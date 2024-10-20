@@ -1,0 +1,13 @@
+* {
+    font-family: "Helvetica Neue", Helvetica, Arial,  sans-serif;
+}
+
+h1 {
+    color: rgb(0, 0, 255);
+}
+
+a {
+    text-decoration-style: wavy;
+    text-decoration-thickness: 6%;
+    color: darkorchid;
+}
