@@ -1,4 +1,4 @@
-class DFA {
+export class DFA {
     constructor(states, transitions, startState) {
         this.states = states;
         this.transitions = transitions;
