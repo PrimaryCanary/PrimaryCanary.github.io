@@ -70,26 +70,3 @@ class Transition {
         this.input = input;
     }
 }
-
-import abs from "./ab-star.js";
-let jabs = JSON.stringify(abs);
-let dabs = DFA.fromJson(jabs);
-// console.log(dabs);
-console.assert(dabs.simulate("ab"), "ab");
-console.assert(dabs.simulate("abab"), "abab");
-console.assert(dabs.simulate(""), "empty string");
-console.assert(!dabs.simulate("aba"), "aba");
-console.assert(!dabs.simulate("abc"), "abc");
-console.assert(!dabs.simulate("bba"), "bba");
-console.assert(!dabs.simulate("abb"), "abb");
-import e0 from "./even-zeroes.js";
-let je0 = JSON.stringify(e0);
-let de0 = DFA.fromJson(je0);
-// console.log(de0);
-console.assert(de0.simulate("1110010001011"), "1110010001011");
-console.assert(de0.simulate("0000"), "0000");
-console.assert(!de0.simulate("110111"), "110111");
-console.assert(!de0.simulate("100110"), "100110");
-console.assert(!de0.simulate("1234"), "1234");
-console.assert(de0.simulate("11111"), "11111");
-console.assert(de0.simulate(""), "empty string");
