@@ -44,7 +44,9 @@ class DFA {
 
     #findViableTransitions(currentState, input) {
         let vts = this.transitions.filter((t) => {
-            if (t.from === currentState && t.input === input) return t;
+            if (t.from.name === currentState.name && t.input === input) {
+                return t;
+            }
         });
         if (vts.length) {
             return vts;
