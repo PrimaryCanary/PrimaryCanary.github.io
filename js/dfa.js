@@ -31,19 +31,26 @@ class DFA {
 
     simulate(input) {
         let currentState = this.start;
-        for (let i = 0; i < input.length; i++) {
-            // Find viable transition
-            let t = this.transitions.filter((t) => {
-                if (t.from === currentState && t.input === input[i]) return t;
-            });
-            if (t.length) {
+        for (const i of input) {
+            let t = this.#findViableTransitions(currentState, i);
+            if (t) {
                 currentState = t[0].to;
             } else {
-                // No viable transitions
                 return false;
             }
         }
         return currentState.accept;
+    }
+
+    #findViableTransitions(currentState, input) {
+        let vts = this.transitions.filter((t) => {
+            if (t.from === currentState && t.input === input) return t;
+        });
+        if (vts.length) {
+            return vts;
+        } else {
+            return undefined;
+        }
     }
 }
 
