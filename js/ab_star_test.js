@@ -1,15 +1,15 @@
-import { DFA } from "./dfa.js";
+import { PDA } from "./pda.js";
 import { assert } from "jsr:@std/assert";
 import abs from "./automata/ab_star.js";
 
 Deno.test("stringify => fromJson", () => {
     const jabs = JSON.stringify(abs);
-    const dabs = DFA.fromJson(jabs);
+    const dabs = PDA.fromJson(jabs);
     assert(dabs);
 });
 
 const jabs = JSON.stringify(abs);
-const dabs = DFA.fromJson(jabs);
+const dabs = PDA.fromJson(jabs);
 const success = ["ab", "abab", ""];
 const fail = ["aba", "abc", "bba", "abb"];
 for (const s of success) {

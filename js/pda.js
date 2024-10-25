@@ -1,4 +1,6 @@
-export class DFA {
+import { Stack } from "./stack.js";
+
+export class PDA {
     constructor(states, transitions, startState) {
         this.states = states;
         this.transitions = transitions;
@@ -21,25 +23,35 @@ export class DFA {
                 stateTable.get(s.from),
                 stateTable.get(s.to),
                 s.input,
+                s.push,
+                s.pop,
             );
         });
         // TODO ensure start is an existing state
         const start = stateTable.get(json["start"]);
 
-        return new DFA(states, transitions, start);
+        return new PDA(states, transitions, start);
     }
 
     simulate(input) {
         let currentState = this.start;
+        let s = new Stack();
         for (const i of input) {
-            let t = this.#findViableTransitions(currentState, i);
-            if (t) {
-                currentState = t[0].to;
+            let vts = this.#findViableTransitions(currentState, i);
+            if (vts) {
+                let t = vts[0];
+                currentState = t.to;
+                if (t.pop) {
+                    s.pop();
+                }
+                if (t.push) {
+                    s.push();
+                }
             } else {
                 return false;
             }
         }
-        return currentState.accept;
+        return currentState.accept && s.empty();
     }
 
     #findViableTransitions(currentState, input) {
@@ -63,10 +75,21 @@ class State {
     }
 }
 
+const EPSILON = "epsilon";
 class Transition {
-    constructor(from, to, input) {
+    constructor(from, to, input, push, pop) {
         this.to = to;
         this.from = from;
         this.input = input;
+        if (push === EPSILON) {
+            this.push = undefined;
+        } else {
+            this.push = push;
+        }
+        if (pop === EPSILON) {
+            this.pop = undefined;
+        } else {
+            this.pop = pop;
+        }
     }
 }
