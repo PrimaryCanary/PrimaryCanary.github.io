@@ -41,11 +41,11 @@ export class PDA {
             if (vts) {
                 let t = vts[0];
                 currentState = t.to;
-                if (t.pop) {
+                for (const _ of t.pop) {
                     s.pop();
                 }
-                if (t.push) {
-                    s.push();
+                for (const p of t.push) {
+                    s.push(p);
                 }
             } else {
                 return false;
@@ -75,21 +75,13 @@ class State {
     }
 }
 
-const EPSILON = "epsilon";
+// const EPSILON = [];
 class Transition {
     constructor(from, to, input, push, pop) {
         this.to = to;
         this.from = from;
         this.input = input;
-        if (push === EPSILON) {
-            this.push = undefined;
-        } else {
-            this.push = push;
-        }
-        if (pop === EPSILON) {
-            this.pop = undefined;
-        } else {
-            this.pop = pop;
-        }
+        this.push = push;
+        this.pop = pop;
     }
 }
