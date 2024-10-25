@@ -42,6 +42,9 @@ export class PDA {
                 let t = vts[0];
                 currentState = t.to;
                 for (const _ of t.pop) {
+                    if (s.empty()) {
+                        return false;
+                    }
                     s.pop();
                 }
                 for (const p of t.push) {
