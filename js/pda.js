@@ -38,20 +38,20 @@ export class PDA {
         let s = new Stack();
         for (const i of input) {
             let vts = this.#findViableTransitions(currentState, i);
-            if (vts) {
-                let t = vts[0];
-                currentState = t.to;
-                for (const _ of t.pop) {
-                    if (s.empty()) {
-                        return false;
-                    }
-                    s.pop();
-                }
-                for (const p of t.push) {
-                    s.push(p);
-                }
-            } else {
+            if (!vts) {
                 return false;
+            }
+
+            let t = vts[0];
+            currentState = t.to;
+            for (const _ of t.pop) {
+                if (s.empty()) {
+                    return false;
+                }
+                s.pop();
+            }
+            for (const p of t.push) {
+                s.push(p);
             }
         }
         return currentState.accept && s.empty();
