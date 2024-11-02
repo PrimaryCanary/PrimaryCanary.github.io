@@ -32,6 +32,7 @@
 .simulator .accept-state circle {
   fill: none;
   stroke: black;
+  stroke-width: 1;
 }
 .simulator svg text {
   text-anchor: middle;
@@ -41,8 +42,8 @@
 .simulator .state circle {
   fill: none;
   stroke: black;
+  stroke-width: 1;
 }
-
 
 .simulator .transition path {
   fill: none;
