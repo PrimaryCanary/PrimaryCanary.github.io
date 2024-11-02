@@ -1,11 +1,40 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Automata Simulator</title>
-    <meta name="Automata Simulator" content="A simulator for finite automata" />
-    <!-- <link rel="stylesheet" href="./styles/index.css" /> -->
+    <meta charset="utf-8" />
+    <title>Map</title>
+    <link rel="stylesheet" href="./styles/index.css" />
   </head>
   <body>
-    <script src="js/dfa.js"></script>
+    <div class="root">
+      <div class="navbar">
+        <a href="./index.html">Simulator</a>
+        <a href="./explanation.html">Explanation</a>
+      </div>
+      <div class="wrapper">
+        <!-- Input sidebar -->
+        <div class="sidebar">
+          <div>
+            Automaton JSON<br />
+            <textarea id="automata-text"></textarea>
+            <br />
+            <div><button id="load">Load</button></div>
+          </div>
+          <div>
+            Accepted strings<br />
+            <textarea></textarea>
+          </div>
+          <div>
+            Rejected strings<br />
+            <textarea></textarea>
+          </div>
+          <div>
+            <button>Simulate</button>
+          </div>
+        </div>
+        <div class="simulator">
+        </div>
+      </div>
+    </div>
   </body>
 </html>
