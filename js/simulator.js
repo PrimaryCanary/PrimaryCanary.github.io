@@ -13,28 +13,28 @@ function loadPda() {
 }
 
 function renderPda(pda) {
-    // console.log(pda);
-    clearSimulator();
+    clearChildren(svg);
 
     for (const s of pda.states) {
         const node = newStateSvg(s, 40, 40, 40);
+        makeDraggable(node);
         svg.appendChild(node);
     }
 }
 
-function clearSimulator() {
-    while (svg.firstChild) {
-        svg.firstChild.remove();
+function clearChildren(element) {
+    while (element.firstChild) {
+        element.firstChild.remove();
     }
 }
 
-const svgNS = "http://www.w3.org/2000/svg";
 function newStateSvg(state, cx, cy, r) {
-    let subSvg = document.createElementNS(svgNS, "svg");
-    let circle = document.createElementNS(svgNS, "circle");
-    let acceptCircle = document.createElementNS(svgNS, "circle");
-    let svgText = document.createElementNS(svgNS, "text");
-    let name = document.createTextNode(state.name);
+    const svgNS = "http://www.w3.org/2000/svg";
+    const subSvg = document.createElementNS(svgNS, "svg");
+    const circle = document.createElementNS(svgNS, "circle");
+    const acceptCircle = document.createElementNS(svgNS, "circle");
+    const svgText = document.createElementNS(svgNS, "text");
+    const name = document.createTextNode(state.name);
 
     subSvg.setAttribute("height", Math.ceil(2 * (r + 2)));
     subSvg.setAttribute("width", Math.ceil(2 * (r + 2)));
@@ -56,7 +56,6 @@ function newStateSvg(state, cx, cy, r) {
     // Last so text is selectable
     subSvg.appendChild(svgText);
 
-    makeDraggable(subSvg);
     return subSvg;
 }
 
@@ -72,7 +71,6 @@ function makeDraggable(element) {
         selected = event.target;
         while (!selected.classList.contains("draggable")) {
             if (selected === svg) {
-                //console.log("canvas clicked");
                 return;
             }
             selected = selected.parentNode;
@@ -80,21 +78,18 @@ function makeDraggable(element) {
         offset = getMousePosition(event);
         offset.x -= selected.x.baseVal.value;
         offset.y -= selected.y.baseVal.value;
-        // console.log(selected);
-        // console.log(offset);
     }
 
     function drag(event) {
         if (selected) {
             event.preventDefault();
             const coord = getMousePosition(event);
-            // console.log(selected);
             selected.x.baseVal.value = coord.x - offset.x;
             selected.y.baseVal.value = coord.y - offset.y;
         }
     }
 
-    function endDrag(event) {
+    function endDrag(_event) {
         selected = undefined;
     }
 
