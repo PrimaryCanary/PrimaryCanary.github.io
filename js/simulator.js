@@ -38,6 +38,7 @@ function newStateSvg(state, cx, cy, r) {
 
     subSvg.setAttribute("height", Math.ceil(2 * (r + 2)));
     subSvg.setAttribute("width", Math.ceil(2 * (r + 2)));
+    subSvg.classList.add("draggable");
     circle.setAttribute("cx", cx + 2);
     circle.setAttribute("cy", cy + 2);
     circle.setAttribute("r", r);
@@ -54,5 +55,53 @@ function newStateSvg(state, cx, cy, r) {
         subSvg.appendChild(acceptCircle);
     }
 
+    makeDraggable(subSvg);
     return subSvg;
+}
+
+function makeDraggable(element) {
+    element.addEventListener("mousedown", startDrag);
+    element.addEventListener("mousemove", drag);
+    element.addEventListener("mouseup", endDrag);
+    element.addEventListener("mouseleave", endDrag);
+
+    let selected = undefined;
+    let offset = undefined;
+    function startDrag(event) {
+        selected = event.target;
+        while (!selected.classList.contains("draggable")) {
+            if (selected === svg) {
+                //console.log("canvas clicked");
+                return;
+            }
+            selected = selected.parentNode;
+        }
+        offset = getMousePosition(event);
+        offset.x -= selected.x.baseVal.value;
+        offset.y -= selected.y.baseVal.value;
+        // console.log(selected);
+        // console.log(offset);
+    }
+
+    function drag(event) {
+        if (selected) {
+            event.preventDefault();
+            const coord = getMousePosition(event);
+            // console.log(selected);
+            selected.x.baseVal.value = coord.x - offset.x;
+            selected.y.baseVal.value = coord.y - offset.y;
+        }
+    }
+
+    function endDrag(event) {
+        selected = undefined;
+    }
+
+    function getMousePosition(event) {
+        const ctm = selected.getScreenCTM();
+        return {
+            x: (event.clientX - ctm.e) / ctm.a,
+            y: (event.clientY - ctm.f) / ctm.d,
+        };
+    }
 }

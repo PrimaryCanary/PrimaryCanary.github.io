@@ -46,3 +46,7 @@
 #simulator .transition polygon {
   fill: black;
 }
+
+#simulator .draggable {
+  cursor: move;
+}
