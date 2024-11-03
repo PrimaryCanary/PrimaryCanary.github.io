@@ -1,0 +1,5 @@
+{
+    "tasks": {
+        "automata-json": "deno run --allow-read=. scripts/automata_to_json.js"
+    }
+}
