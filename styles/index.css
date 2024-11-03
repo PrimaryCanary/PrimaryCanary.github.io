@@ -23,32 +23,26 @@
   border-color: black;
   padding-right: 10px;
 }
-.simulator {
+#simulator {
   border: 1px solid black;
   width: 100vw;
   height: 100vh;
 }
 
-.simulator .accept-state circle {
-  fill: none;
+#simulator svg circle {
+  fill: transparent;
   stroke: black;
   stroke-width: 1;
 }
-.simulator svg text {
+#simulator svg text {
   text-anchor: middle;
   dominant-baseline: middle;
 }
 
-.simulator .state circle {
-  fill: none;
-  stroke: black;
-  stroke-width: 1;
-}
-
-.simulator .transition path {
+#simulator .transition path {
   fill: none;
   stroke: black;
 }
-.simulator .transition polygon {
+#simulator .transition polygon {
   fill: black;
 }

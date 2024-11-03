@@ -35,14 +35,14 @@ export class PDA {
 
   simulate(input) {
     let currentState = this.start;
-    let s = new Stack();
+    const s = new Stack();
     for (const i of input) {
-      let vts = this.#findViableTransitions(currentState, i);
+      const vts = this.#findViableTransitions(currentState, i);
       if (!vts) {
         return false;
       }
 
-      let t = vts[0];
+      const t = vts[0];
       currentState = t.to;
       for (const _ of t.pop) {
         if (s.empty()) {
@@ -58,7 +58,7 @@ export class PDA {
   }
 
   #findViableTransitions(currentState, input) {
-    let vts = this.transitions.filter((t) => {
+    const vts = this.transitions.filter((t) => {
       if (t.from.name === currentState.name && t.input === input) {
         return t;
       }
