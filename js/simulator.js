@@ -49,11 +49,12 @@ function newStateSvg(state, cx, cy, r) {
     svgText.setAttribute("y", "50%");
     svgText.appendChild(name);
 
-    subSvg.appendChild(circle);
-    subSvg.appendChild(svgText);
     if (state.accept) {
         subSvg.appendChild(acceptCircle);
     }
+    subSvg.appendChild(circle);
+    // Last so text is selectable
+    subSvg.appendChild(svgText);
 
     makeDraggable(subSvg);
     return subSvg;
