@@ -15,11 +15,51 @@ function loadPda() {
 function renderPda(pda) {
     clearChildren(svg);
 
-    for (const s of pda.states) {
-        const node = newStateSvg(s, 40, 40, 40);
+    for (const t of pda.transitions) {
+        const node = newTransitionSvg(t);
         makeDraggable(node);
         svg.appendChild(node);
     }
+
+    for (const s of pda.states) {
+        const node = newStateSvg(s, STATE_RADIUS);
+        makeDraggable(node);
+        svg.appendChild(node);
+    }
+}
+
+function newTransitionSvg(t) {
+    const subSvg = document.createElementNS(SVGNS, "svg");
+    const path = document.createElementNS(SVGNS, "path");
+    const arrow = document.createElementNS(SVGNS, "polygon");
+    const svgText = document.createElementNS(SVGNS, "text");
+    const name = document.createTextNode(transitionToString(t));
+
+    subSvg.setAttribute("height", 100);
+    subSvg.setAttribute("width", 100);
+    subSvg.classList.add("draggable");
+    subSvg.classList.add("transition");
+
+    if (t.to === t.from) {
+        path.setAttribute("d", "M 40,80 Q 50,-20 60,75");
+        arrow.setAttribute("points", "55,75 65,75 60,85");
+        svgText.setAttribute("x", "50%");
+        svgText.setAttribute("y", "20%");
+    } else {
+        path.setAttribute("d", "M 0,50 Q 50,25 90,50");
+        arrow.setAttribute("points", "90,55 90,45 100,50");
+        svgText.setAttribute("x", "50%");
+        svgText.setAttribute("y", "50%");
+    }
+
+    svgText.appendChild(name);
+
+    subSvg.appendChild(path);
+    subSvg.appendChild(arrow);
+    // Last so text is selectable
+    subSvg.appendChild(svgText);
+
+    return subSvg;
 }
 
 function clearChildren(element) {
@@ -28,28 +68,30 @@ function clearChildren(element) {
     }
 }
 
-function newStateSvg(state, cx, cy, r) {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const subSvg = document.createElementNS(svgNS, "svg");
-    const circle = document.createElementNS(svgNS, "circle");
-    const acceptCircle = document.createElementNS(svgNS, "circle");
-    const svgText = document.createElementNS(svgNS, "text");
-    const name = document.createTextNode(state.name);
+const SVGNS = "http://www.w3.org/2000/svg";
+const STATE_RADIUS = 40;
+function newStateSvg(s) {
+    const subSvg = document.createElementNS(SVGNS, "svg");
+    const circle = document.createElementNS(SVGNS, "circle");
+    const acceptCircle = document.createElementNS(SVGNS, "circle");
+    const svgText = document.createElementNS(SVGNS, "text");
+    const name = document.createTextNode(s.name);
 
-    subSvg.setAttribute("height", Math.ceil(2 * (r + 2)));
-    subSvg.setAttribute("width", Math.ceil(2 * (r + 2)));
+    subSvg.setAttribute("height", Math.ceil(2 * (STATE_RADIUS + 2)));
+    subSvg.setAttribute("width", Math.ceil(2 * (STATE_RADIUS + 2)));
     subSvg.classList.add("draggable");
-    circle.setAttribute("cx", cx + 2);
-    circle.setAttribute("cy", cy + 2);
-    circle.setAttribute("r", r);
-    acceptCircle.setAttribute("cx", cx + 2);
-    acceptCircle.setAttribute("cy", cy + 2);
-    acceptCircle.setAttribute("r", r - 2);
+    subSvg.id = s.name;
+    circle.setAttribute("cx", STATE_RADIUS + 2);
+    circle.setAttribute("cy", STATE_RADIUS + 2);
+    circle.setAttribute("r", STATE_RADIUS);
+    acceptCircle.setAttribute("cx", STATE_RADIUS + 2);
+    acceptCircle.setAttribute("cy", STATE_RADIUS + 2);
+    acceptCircle.setAttribute("r", STATE_RADIUS - 2);
     svgText.setAttribute("x", "50%");
     svgText.setAttribute("y", "50%");
     svgText.appendChild(name);
 
-    if (state.accept) {
+    if (s.accept) {
         subSvg.appendChild(acceptCircle);
     }
     subSvg.appendChild(circle);
@@ -57,6 +99,12 @@ function newStateSvg(state, cx, cy, r) {
     subSvg.appendChild(svgText);
 
     return subSvg;
+}
+
+function transitionToString(t) {
+    const push = t.push.join("");
+    const pop = t.pop.join("");
+    return `${t.input},${push ? push : "ε"},${pop ? pop : "ε"}`;
 }
 
 function makeDraggable(element) {

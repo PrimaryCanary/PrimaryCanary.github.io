@@ -40,7 +40,7 @@
 }
 
 #simulator .transition path {
-  fill: none;
+  fill: transparent;
   stroke: black;
 }
 #simulator .transition polygon {
