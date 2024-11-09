@@ -1,55 +1,66 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>Automata Simulator</title>
-  <link rel="stylesheet" href="./styles/navbar.css" />
-  <link rel="stylesheet" href="./styles/index.css" />
-</head>
+  <head>
+    <meta charset="utf-8" />
+    <title>Automata Simulator</title>
+    <link rel="stylesheet" href="./styles/navbar.css" />
+    <link rel="stylesheet" href="./styles/index.css" />
+  </head>
 
-<body>
-  <div class="root">
-    <div class="navbar">
-      <a class="left" href="./index.html">Simulator</a>
-      <a class="left" href="./pages/explanation.html">Explanation</a>
-      <a class="right" href="https://github.com/PrimaryCanary/PrimaryCanary.github.io">
-        <img id="github" src="./assets/github-mark-white.svg" alt="Github repo">
-    </a>
-    </div>
-    <div class="sidebar-wrapper">
-      <!-- Input sidebar -->
-      <div class="sidebar">
-        <div>
-          Automaton JSON<br />
-          <textarea id="automata-text"></textarea>
-          <br />
-          <div><button id="load">Load</button></div>
+  <body>
+    <div class="root">
+      <div class="navbar">
+        <a class="left" href="./index.html">Simulator</a>
+        <a class="left" href="./pages/explanation.html">Explanation</a>
+        <a
+          class="right"
+          href="https://github.com/PrimaryCanary/PrimaryCanary.github.io"
+        >
+          <img
+            id="github"
+            src="./assets/github-mark-white.svg"
+            alt="Github repo"
+          />
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <!-- Input sidebar -->
+        <div class="sidebar">
+          <div>
+            Automaton JSON<br />
+            <textarea id="automata-text"></textarea>
+            <br />
+            <div><button id="load">Load</button></div>
+          </div>
+          <div>
+            Accepted strings<br />
+            <textarea id="accept" placeholder="One per line"></textarea>
+          </div>
+          <div>
+            Rejected strings<br />
+            <textarea id="reject" placeholder="One per line"></textarea>
+          </div>
+          <div>
+            <button id="simulate">Simulate</button>
+          </div>
         </div>
-        <div>
-          Accepted strings<br />
-          <textarea id="accept" placeholder="One per line"></textarea>
-        </div>
-        <div>
-          Rejected strings<br />
-          <textarea id="reject" placeholder="One per line"></textarea>
-        </div>
-        <div>
-          <button id="simulate">Simulate</button>
+        <div id="simulator-wrapper">
+          <div class="simulator">
+            <svg id="simulator-svg" height="100%" width="100%"></svg>
+          </div>
+          <div class="results">
+            <!-- <div>Results</div> -->
+            <div>
+              <textarea
+                id="result-box"
+                readonly="true"
+                placeholder="Results"
+              ></textarea>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="simulator-wrapper">
-        <div class="simulator">
-          <svg id="simulator-svg" height="100%" width="100%">
-          </svg>
-        </div>
-        <div class="results">
-          <!-- <div>Results</div> -->
-          <div><textarea id="result-box" readonly="true" placeholder="Results"></textarea></div>
-        </div>
-      </div>
     </div>
-  </div>
-  <script type="module" src="./js/simulator.js"></script>
-</body>
-
+    <script type="module" src="./js/simulator.js"></script>
+  </body>
 </html>
