@@ -12,41 +12,68 @@
   padding: 8px 16px;
 }
 
-.wrapper {
+.sidebar-wrapper {
   display: flex;
   width: 100%;
   height: 100%;
 }
+
 .sidebar {
   justify-content: center;
   border: 10px;
   border-color: black;
   padding-right: 10px;
 }
-#simulator {
+
+#simulator-wrapper {
+  display: flex;
+  flex-flow: column;
   border: 1px solid black;
-  width: 100vw;
-  height: 100vh;
+  height: 100%;
+  width: 100%;
 }
 
-#simulator svg circle {
+.simulator {
+  flex: 1 0 70vh;
+  width: 100%;
+}
+
+.results {
+  flex: 1 0 20vh;
+  width: 100%;
+  border: 1px solid black;
+  justify-content: center;
+}
+
+.results textarea {
+  /* display: flex; */
+  flex-flow: row;
+  flex: 1 1 auto;
+  width: 99%;
+  height: 19vh;
+  resize: none;
+}
+
+#simulator-svg svg circle {
   fill: transparent;
   stroke: black;
   stroke-width: 1;
 }
-#simulator svg text {
+
+#simulator-svg svg text {
   text-anchor: middle;
   dominant-baseline: middle;
 }
 
-#simulator .transition path {
+#simulator-svg .transition path {
   fill: transparent;
   stroke: black;
 }
-#simulator .transition polygon {
+
+#simulator-svg .transition polygon {
   fill: black;
 }
 
-#simulator .draggable {
+#simulator-svg .draggable {
   cursor: move;
 }
