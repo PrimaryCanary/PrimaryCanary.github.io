@@ -1,0 +1,22 @@
+.navbar {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  background-color: #333;
+  padding: 10px;
+}
+
+.navbar .left {
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+}
+
+.navbar .right {
+    margin-left: auto;
+}
+
+.navbar #github {
+    height: 39px;
+    width: auto;
+}
