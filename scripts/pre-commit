@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+powershell.exe -Command "& deno task check-fmt"

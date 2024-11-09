@@ -1,5 +1,8 @@
 {
     "tasks": {
-        "automata-json": "deno run --allow-read=. scripts/automata_to_json.js"
+        "automata-json": "deno run --allow-read=. scripts/automata_to_json.js",
+        "fmt": "deno fmt --unstable-html --unstable-css index.html **/*.html **/*.css **/*.js",
+        "check-fmt": "deno fmt --quiet --check --unstable-html --unstable-css **/*.html **/*.css **/*.js",
+        "install-git-hooks": "cp scripts/pre-commit .git/hooks/"
     }
 }
