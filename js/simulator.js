@@ -3,28 +3,70 @@ import { PDA } from "./pda.js";
 const load = document.getElementById("load");
 const aut_text = document.getElementById("automata-text");
 const svg = document.getElementById("simulator-svg");
+const simulate = document.getElementById("simulate");
+const accept = document.getElementById("accept");
+const reject = document.getElementById("reject");
+const results = document.getElementById("result-box");
+
+let pda = undefined;
 
 load.addEventListener("click", loadPda);
+simulate.addEventListener("click", runSimulation);
+
+class Result {
+  constructor(str, shouldAccept, didAccept) {
+    this.str = str;
+    this.shouldAccept = shouldAccept;
+    this.didAccept = didAccept;
+  }
+
+  toResultString() {
+    const verb = this.shouldAccept ? "accepted" : "rejected";
+    const str = this.str === "" ? '""' : this.str;
+    return `${str} was ${verb}: ${this.didAccept === this.shouldAccept}`;
+  }
+}
+
+function runSimulation() {
+  if (!pda) {
+    results.value = "Error: no automata loaded";
+  }
+
+  const acc = parseStringPerLine(accept.value).map((s) => {
+    return new Result(s, true, pda.simulate(s));
+  });
+  const rej = parseStringPerLine(reject.value).map((s) => {
+    return new Result(s, false, pda.simulate(s));
+  });
+  const resultStrings = acc.concat(rej).map((res) => {
+    return res.toResultString();
+  });
+  results.value = resultStrings.join("\n");
+}
+
+function parseStringPerLine(str) {
+  return str.trimEnd().split("\n");
+}
 
 function loadPda() {
   const json = aut_text.value;
-  const pda = PDA.fromJson(json);
-  renderPda(pda);
+  results.value = "";
+  pda = PDA.fromJson(json);
+  clearChildren(svg);
+  renderPda(svg, pda);
 }
 
-function renderPda(pda) {
-  clearChildren(svg);
-
+function renderPda(base, pda) {
   for (const t of pda.transitions) {
     const node = newTransitionSvg(t);
     makeDraggable(node);
-    svg.appendChild(node);
+    base.appendChild(node);
   }
 
   for (const s of pda.states) {
     const node = newStateSvg(s, STATE_RADIUS);
     makeDraggable(node);
-    svg.appendChild(node);
+    base.appendChild(node);
   }
 }
 

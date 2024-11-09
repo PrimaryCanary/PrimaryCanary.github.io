@@ -52,6 +52,7 @@
   width: 99%;
   height: 19vh;
   resize: none;
+  outline: none;
 }
 
 #simulator-svg svg circle {
