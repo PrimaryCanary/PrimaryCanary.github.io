@@ -51,7 +51,11 @@ function parseStringPerLine(str) {
 function loadPda() {
   const json = aut_text.value;
   results.value = "";
-  pda = PDA.fromJson(json);
+  try {
+    pda = PDA.fromJson(json);
+  } catch (e) {
+    results.value = "Error: failed to create PDA: " + e;
+  }
   clearChildren(svg);
   renderPda(svg, pda);
 }
