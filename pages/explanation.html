@@ -29,6 +29,1017 @@
           />
         </a>
       </div>
+      <div class="background">
+        <div class="content">
+          <h1 id="intro">Intro</h1>
+          <p>
+            Hi! I’m Aaron, and I want to share one of my favorite topics from my
+            computer science undergrad: finite automata. I’ve wanted to write a
+            simulator for them for a long time. I did (<a href="../index.html"
+            >check it out</a>), but simulations are no fun if you don’t
+            understand what’s happening. My goal is to teach you about a
+            fascinating computer science topic without sounding like a computer
+            scientist. You see, I spent a lot of time as a researcher in
+            academia. The other academics taught me all about the maximally
+            information-dense, serious, no pronouns or passive voice, formal
+            style of writing. You know the one. The kind of textbook writing
+            where expressing a single moment of joy is taken as implicit
+            permission for an editor to set you aflame. I call it the academic
+            no-style style. There will be none of that here. We’re allowed to
+            have fun, so let’s have some fun learning about state machines toge-
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>What’s a state machine?</span>
+            </div>
+          </div>
+          <p>
+            A nicer name for finite automata. Say hello to Nibbles. They are my
+            assistant. They’ll be learning alongside us and causing mischief by
+            asking tough questions at really annoying times. Don’t get too
+            close. They bite :).
+          </p>
+          <h1 id="why">Why?</h1>
+          <p>
+            Understanding state machines has profoundly shaped my programming
+            style. Noticing when a problem can be modelled as a finite
+            automata—and encoding it as data types with functions between
+            them—is a simple-yet-powerful problem solving tool. It can even
+            yield a machine-checked proof of the validity of the implementation.
+            And problems like that aren’t rare either. Take programming language
+            syntax, for example: it’s modellable as a state machine, guiding you
+            through patterns like
+            <code>let -&gt; {name} -&gt; = -&gt; {expression} -&gt; ;</code>.
+            Because programming and state machines share the same core
+            principle—figuring out what to do next based on the current state of
+            the program—I’ve found them to be a widely-applicable tool in many
+            real programming domains.
+          </p>
+          <h1 id="the-goal">The Goal</h1>
+          <p>By the end of this, we’re hoping to have ways to:</p>
+          <ol type="1">
+            <li><em>Represent</em> that a given input is not valid</li>
+            <li><em>Represent</em> that a given input is valid</li>
+            <li>Make decisions about which inputs are valid or not</li>
+          </ol>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>Why did you write <em>represent</em> like that?</span>
+            </div>
+          </div>
+          <p>
+            Because <em>italics</em> are important. Keep it in mind. I promise
+            I’ll come back to it.
+          </p>
+          <p>
+            DFAs are powerful enough to satisfy these requirements but their
+            limitations will become apparent. Namely, DFAs are like jellyfish:
+            making decisions blindly with no memory of the past or future. So
+            the next things on the wish list are ways to:
+          </p>
+          <ol start="4" type="1">
+            <li>Remember the input</li>
+            <li>Make decisions based on memory</li>
+          </ol>
+          <p>
+            To achieve these, we’ll invent a new, more powerful type of automata
+            called PDAs with more memory than literally a single item. PDAs turn
+            out to be powerful enough to model most things programmers care
+            about. The limitations arise with their <em>representation</em>. Try
+            as we might, we can’t write programs with pretty pictures.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>That’s why ‘represent’ was important?</span>
+            </div>
+          </div>
+          <p>Exactly! It’s also why the last wist list item becomes:</p>
+          <ol start="6" type="1">
+            <li>Translate the representation to a computational model</li>
+          </ol>
+          <h1 id="inputs">Inputs</h1>
+          <p>
+            Quick aside: inputs are the things we’re making decisions about.
+            Technically they can be anything but computer scientists usually
+            limit it to blocks of text. When I mention inputs, think words,
+            strings, or
+            <code>let varname = expression;</code>.
+          </p>
+          <h1 id="deterministic-finite-automata">
+            Deterministic Finite Automata
+          </h1>
+          <p>
+            DFAs are the simplest state machines, and will be what we build to
+            start checking items off the wish list. They have some nice
+            properties, like only requiring two ideas to be reach full
+            understanding
+          </p>
+          <h2 id="states-and-transitions">States and Transitions</h2>
+          <p>
+            The first two bits of the wish list are pretty easy to knock out.
+          </p>
+          <div class="automaton">
+            <svg
+              height="84"
+              width="84"
+              x="117"
+              y="142"
+            >
+              <circle cx="42" cy="42" r="40"></circle>
+              <text x="50%" y="50%">reject</text>
+            </svg>
+          </div>
+          <p>
+            This is how state machines represent wrong decisions. Isn’t it
+            beautiful? It’s called a <em>rejecting state</em>. If
+            decision-making ends with in a state like this, the input was
+            rejected (or not accepted, invalid, malformed, etc.). Naturally,
+            rejecting states have their counterpart, <em>accepting states</em>.
+          </p>
+          <div class="automaton">
+            <svg height="84" width="84" x="20" y="148">
+              <circle cx="42" cy="42" r="38"></circle>
+              <circle cx="42" cy="42" r="40"></circle>
+              <text x="50%" y="50%">accept</text>
+            </svg>
+          </div>
+          <p>
+            Moving between states like these are how state machines determine
+            the outcome of decisions. Noticably absent still is the ability to
+            make decisions. Enter transitions:
+          </p>
+          <div class="automaton">
+            <svg id="simulator-svg" height="158">
+              <svg height="100" width="100" x="109" y="-12">
+                <path d="M 40,80 Q 50,-20 60,75"></path>
+                <polygon points="55,75 65,75 60,85"></polygon>
+                <text x="50%" y="20%">a</text>
+              </svg>
+              <svg
+                height="84"
+                width="84"
+                x="118"
+                y="73"
+              >
+                <circle cx="42" cy="42" r="38"></circle>
+                <circle cx="42" cy="42" r="40"></circle>
+                <text x="50%" y="50%">all 'a'</text>
+              </svg>
+            </svg>
+          </div>
+          <p>
+            The transition is the loopy bit. The beginning state is the
+            non-arrow side, the destination state is whatever the arrow is
+            pointing at, and the transition should be taken when the next bit of
+            input is specified letter. It reads like “when in state <code>all
+              'a'</code> and an ‘a’ is encountered in the input, transition to
+            state <code>all 'a'</code>.”
+          </p>
+          <p>
+            Here’s some JSON that represents the above DFA. Try pasting it into
+            the
+            <a href="../index.html">simulator</a> and feeding it some inputs.
+            Ignore the epsilons (ε). They’ll be important later.
+          </p>
+          <div class="reveal">
+            <details>
+              <summary>All a's JSON</summary>
+              <pre
+              >
+{
+  "description": "Automaton for strings of a's",
+  "states": [
+    {
+      "name": "all 'a'",
+      "accept": true
+    }
+  ],
+  "transitions": [
+    {
+      "from": "all 'a'",
+      "to": "all 'a'",
+      "input": "a",
+      "push": [],
+      "pop": []
+    }
+  ],
+  "start": "all 'a'"
+}
+          </pre
+              >
+            </details>
+          </div>
+          <br />
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>The simulator’s broken &gt;:(.</span>
+            </div>
+          </div>
+          <p>Hmmm?</p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>It rejects things even with no reject state.</span>
+            </div>
+          </div>
+          <p>
+            Ah. You’re right Nibbles. It’s allowed to do that because there are
+            some implicit conventions in DFA representation. The one you’re
+            running into is the trash rule. To keep the diagrams from having a
+            bunch of transitions discarding irrelevant input, every state has an
+            implicit transition that sends every input not covered by the
+            transitions into an inescapable rejecting state. Something like
+            this:
+          </p>
+          <div class="automaton">
+            <svg height="160">
+              <svg
+                height="100"
+                width="100"
+                x="0"
+                y="-10"
+              >
+                <path d="M 40,80 Q 50,-20 60,75"></path>
+                <polygon points="55,75 65,75 60,85"></polygon>
+                <text x="50%" y="20%">a</text>
+              </svg>
+              <svg
+                height="100"
+                width="100"
+                x="100"
+                y="65"
+              >
+                <path d="M 0,50 Q 50,25 90,50"></path>
+                <polygon points="90,55 90,45 100,50"></polygon>
+                <text x="50%" y="50%">not a</text>
+              </svg>
+              <svg
+                height="100"
+                width="100"
+                x="195"
+                y="-10"
+              >
+                <path d="M 40,80 Q 50,-20 60,75"></path>
+                <polygon points="55,75 65,75 60,85"></polygon>
+                <text x="50%" y="20%">all</text>
+              </svg>
+              <svg
+                height="84"
+                width="84"
+                x="10"
+                y="75"
+              >
+                <circle cx="42" cy="42" r="38"></circle>
+                <circle cx="42" cy="42" r="40"></circle>
+                <text x="50%" y="50%">all 'a'</text>
+              </svg>
+              <svg
+                height="84"
+                width="84"
+                x="205"
+                y="75"
+              >
+                <circle cx="42" cy="42" r="40"></circle>
+                <text x="50%" y="50%">trash</text>
+              </svg>
+            </svg>
+          </div>
+          <p>
+            There are a few more conventions but the most important one
+            remaining is the starting state. There is no universal annotation
+            for where to start in a state machine.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>Why not?</span>
+            </div>
+          </div>
+          <p>
+            Because computer scientists have formal models that nail down all
+            the ambiguity in state machine representations. We’ll do the same
+            when we do our own translation to formal models. For now, the
+            starting state will be pretty obvious. It will usually be the
+            leftmost state.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>What now?</span>
+            </div>
+          </div>
+          <p>
+            Examples! I have a DFA for accepting strings of alternating ’a’s and
+            ’b’s and another for accepting (binary) strings with an even number
+            of zeroes. Try to draw them out on your own then use the JSON above
+            to try to translate them into something the simulator can execute.
+          </p>
+          <div class="reveal">
+            <details>
+              <summary>Alternating ab JSON</summary>
+              <pre
+              >
+{
+  "description": "PDA for {ab}*",
+  "states": [
+    {
+      "name": "a",
+      "accept": true
+    },
+    {
+      "name": "b",
+      "accept": false
+    }
+  ],
+  "transitions": [
+    {
+      "from": "a",
+      "to": "b",
+      "input": "a",
+      "push": [],
+      "pop": []
+    },
+    {
+      "from": "b",
+      "to": "a",
+      "input": "b",
+      "push": [],
+      "pop": []
+    }
+  ],
+  "start": "a"
+}
+          </pre
+              >
+            </details>
+          </div>
+          <br />
+          <div class="reveal">
+            <details>
+              <summary>Even zeroes JSON</summary>
+              <pre
+              >
+{
+  "description": "PDA for (1* 0 1* 0 1*)* i.e. binary strings with even number of zeroes",
+  "states": [
+    {
+      "name": "even",
+      "accept": true
+    },
+    {
+      "name": "odd",
+      "accept": false
+    }
+  ],
+  "transitions": [
+    {
+      "from": "even",
+      "to": "odd",
+      "input": "0",
+      "push": [],
+      "pop": []
+    },
+    {
+      "from": "even",
+      "to": "even",
+      "input": "1",
+      "push": [],
+      "pop": []
+    },
+    {
+      "from": "odd",
+      "to": "even",
+      "input": "0",
+      "push": [],
+      "pop": []
+    },
+    {
+      "from": "odd",
+      "to": "odd",
+      "input": "1",
+      "push": [],
+      "pop": []
+    }
+  ],
+  "start": "even"
+}
+          </pre
+              >
+            </details>
+          </div>
+          <h2 id="limitations">Limitations</h2>
+          <p>
+            DFAs are simple. That simplicity is a strength and a weakness. The
+            strength is that DFAs are about the fastest computation a computer
+            can do.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>I don’t believe you.</span>
+            </div>
+          </div>
+          <p>
+            Believe it Nibbles. Optimizing compilers can turn DFAs into just a
+            few CPU instructions. (It does require the Earth, Moon, and stars to
+            align for the optimizer heuristics to fully activate though.)
+            Basically only straight-line number-crunching is faster. The
+            weakness is that DFAs are relatively limited in power. I know the
+            wish list has already spoiled it but try to think of the fatal flaw.
+          </p>
+          <p>…</p>
+          <p>…</p>
+          <p>Ready? …</p>
+          <p>…</p>
+          <p>
+            DFAs have almost no memory. They can only compute things that
+            require a
+            <em>constant amount of memory</em>. The even zeroes DFA has three
+            bits of memory: empty, even, and odd. The alternating ‘ab’ DFA has
+            even less: expecting ‘a’ and expecting ‘b’. The corollary is that
+            they can’t count; after all, counting would require them to remember
+            an ever-increasing number of things. That limitation means things
+            like programming language syntax are beyond the reach of DFAs. For
+            example, they can’t enforce that each opening bracket “{” should
+            have a corresponding closing bracket “}” because that requires the
+            ability to keep track of how many opening brackets have occurred.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>And DFAs can’t count.</span>
+            </div>
+          </div>
+          <p><em>And DFAs can’t count</em>.</p>
+          <h1 id="pushdown-automata">Pushdown Automata</h1>
+          <p>
+            If the fatal flaw of DFAs is limited memory, the obvious thing to do
+            is give them some memory. Keeping with the theme of DFAs, we’ll do
+            the simplest possible extensions until all the items of our wish
+            list are checked off.
+          </p>
+          <h2 id="stacks">Stacks</h2>
+          <p>
+            First things first: choosing a data structure. What is the simplest
+            possible data structure that can remember an arbitrary number of
+            things?
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>A list obviously.</span>
+            </div>
+          </div>
+          <p>
+            Surprisingly not! Lists and arrays are about the simplest in terms
+            of structure (on account of not really having any) but have a couple
+            capabilities that we can strip away to achieve maximum simplicity.
+            Do you see what I’m getting at Nibbles?
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>…</span>
+            </div>
+          </div>
+          <p>
+            Arrays are random access data structures. Every item in an array can
+            be accessed.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>And you’re going to take that away?</span>
+            </div>
+          </div>
+          <p>
+            Yep 😈. Absolute maximum simplicity. Instead of lists or arrays, the
+            new automata will use <em>stacks</em>. Stacks are basically the same
+            as lists except only the first element is accessible. The only
+            possible operations are accessing the first item, adding a new first
+            item, and removing the old first item (<em>peek</em>, <em>push</em>,
+            and
+            <em>pop</em> respectively). Strictly speaking, it’s not even
+            possible to replace an item.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>We have to fake it by popping the top then pushing a
+                replacement.</span>
+            </div>
+          </div>
+          <p>Correct. How’s that for simple?</p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>I hate it.</span>
+            </div>
+          </div>
+          <p>
+            I love it. It’s thematic! Automata only look at a single letter of
+            input; why not let them access only a single letter of memory? This
+            simple data structure and its operations are why the new
+            constructions are called <em>pushdown automata</em>.
+          </p>
+          <h2 id="remembering-input">Remembering Input</h2>
+          <p>
+            The extension has been chosen; DFAs will gain an integrated stack to
+            help them learn to count. Now let’s dive into the specifics of the
+            integration. States will remain unchanged; they already represent
+            individual bits of memory so there is no need to extend them with
+            more. Transitions will not remain unchanged; just like how
+            transitions were the mechanism by which DFAs made decisions, they
+            will now additionally be the mechanism by which PDAs decide how to
+            manipulate stacks. Transitions will now have three parts:
+          </p>
+          <ol type="1">
+            <li>An input to consume. This part remains unchanged from DFAs.</li>
+            <li>Zero or more items to push to the stack.</li>
+            <li>Zero or more items to pop from the stack.</li>
+          </ol>
+          <p>
+            We’ll write them like this:
+            <code>--input, push operations, pop operations--&gt;</code>. Multple
+            stack operations are written by concatenating them together
+            e.g. pushing three separate zeroes and two ones is written
+            <code>--input, 000, 11--&gt;</code>. It’s common for the push or pop
+            operations to be empty, and leaving them blank is kind of ugly. To
+            fix it, empty operations are written as ε.
+          </p>
+          <p>
+            These stack operations are all it takes for the new automata to be
+            able to count.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>That’s all it takes?</span>
+            </div>
+          </div>
+          <p>
+            Definitely. Consider the previous example of programming language
+            brackets. PDAs can count how many opening brackets “{” occur by
+            pushing one to the stack each time one is encountered and popping
+            one for each “}”.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>What if there’s not the same amount?</span>
+            </div>
+          </div>
+          <p>We need another bit of our wish list for that. Hold on.</p>
+          <h2 id="making-decisions">Making Decisions</h2>
+          <p>
+            PDAs can now remember input but they still can’t use that
+            information. We need to allow PDAs to make decisions based on the
+            status of the stack in order for the newfound memory to be
+            meaningful. We let PDAs accept or reject an input based on two new
+            criteria:
+          </p>
+          <ol type="1">
+            <li>
+              Popping from an empty stack is an instant reject. This is similar
+              to the trash rule in a DFA.
+            </li>
+            <li>The stack must be empty for an input to be accepted.</li>
+          </ol>
+          <p>
+            These rejection criteria give them a notion of <em>equality</em>. So
+            to answer your question Nibbles, if there are too few “}”, the stack
+            won’t be empty and the input will be rejected. If there are too many
+            “}”, the PDA will try to pop from an empty stack and be rejected.
+          </p>
+          <h2 id="examples">Examples</h2>
+          <p>
+            Let’s try to create the automaton we’ve been using as an example.
+            I’ll give some pointers as we go.
+          </p>
+          <p>
+            The requirements have already been sketched out but could be more
+            explicit. We want to build an automaton that accepts strings of “{”s
+            followed by an equal number of “}”s. The empty string does fit that
+            definition but let’s make the string require at least one “{”. Ready
+            Nibbles?
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>Ready.</span>
+            </div>
+          </div>
+          <p>
+            I’ve already given a couple hints in the previous examples. The
+            biggest is that there will be at least two transitions, one for
+            pushing “{”s and one for popping “}”s. Think about what input each
+            transition should consume.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>Got it. <code>--{, {, ε--&gt;</code> and
+                <code>--}, ε, {--&gt;</code>.</span>
+            </div>
+          </div>
+          <p>
+            Now think about which states are necessary to make those transitions
+            meaningful.
+          </p>
+          <div class="reveal">
+            <details>
+              <summary>Hint</summary>
+              <div class="prose">
+                It might help to think of this PDA as operating in phases.
+              </div>
+            </details>
+          </div>
+          <br />
+          <div class="reveal">
+            <details>
+              <summary>Hint</summary>
+              <div class="prose">
+                The PDA needs to count all the “{”s then all the “}”s.
+              </div>
+            </details>
+          </div>
+          <p>
+            At this point, we have this partial PDA. Paste it into the simulator
+            for a visualization.
+          </p>
+          <div class="reveal">
+            <details>
+              <summary>
+                Partial {<sup>n</sup> }<sup>n</sup> JSON
+              </summary>
+              <pre
+              >
+{
+  "description": "PDA for {^n }^n i.e. n {'s followed by n }'s",
+  "states": [
+    {
+      "name": "eat {'s",
+      "accept": false
+    },
+    {
+      "name": "eat }'s",
+      "accept": true
+    }
+  ],
+  "transitions": [
+    {
+      "from": "eat {'s",
+      "to": "eat {'s",
+      "input": "{",
+      "push": [
+        "{"
+      ],
+      "pop": []
+    },
+    {
+      "from": "eat }'s",
+      "to": "eat }'s",
+      "input": "}",
+      "push": [],
+      "pop": [
+        "{"
+      ]
+    }
+  ],
+  "start": "eat {'s"
+}
+          </pre
+              >
+            </details>
+          </div>
+          <p>What is missing?</p>
+          <div class="reveal">
+            <details>
+              <summary>Hint</summary>
+              <div class="prose">
+                A way to move between the two phase states.
+              </div>
+            </details>
+          </div>
+          <p>When should that happen?</p>
+          <div class="reveal">
+            <details>
+              <summary>Hint</summary>
+              <div class="prose">When the first phase is over.</div>
+            </details>
+          </div>
+          <br />
+          <div class="reveal">
+            <details>
+              <summary>Hint</summary>
+              <div class="prose">When the first “}” is encountered.</div>
+            </details>
+          </div>
+          <p>That should be it. We have this completed PDA.</p>
+          <div class="reveal">
+            <details>
+              <summary>
+                Completed {<sup>n</sup> }<sup>n</sup> JSON
+              </summary>
+              <pre
+              >
+{
+  "description": "PDA for {^n }^n i.e. n {'s followed by n }'s",
+  "states": [
+    {
+      "name": "eat {'s",
+      "accept": false
+    },
+    {
+      "name": "eat }'s",
+      "accept": true
+    }
+  ],
+  "transitions": [
+    {
+      "from": "eat {'s",
+      "to": "eat {'s",
+      "input": "{",
+      "push": [
+        "{"
+      ],
+      "pop": []
+    },
+    {
+      "from": "eat {'s",
+      "to": "eat }'s",
+      "input": "}",
+      "push": [],
+      "pop": [
+        "{"
+      ]
+    },
+    {
+      "from": "eat }'s",
+      "to": "eat }'s",
+      "input": "}",
+      "push": [],
+      "pop": [
+        "{"
+      ]
+    }
+  ],
+  "start": "eat {'s"
+}
+          </pre
+              >
+            </details>
+          </div>
+          <p>
+            Well done! There are some interesting extensions to this example.
+            One is making it accept the empty string. Another is making it
+            accept some “{”s followed by twice as many “}”s. Try to work through
+            it on your own, Nibbles. I’ve left a completed PDA for this problem
+            if you get stuck.
+          </p>
+          <div class="reveal">
+            <details>
+              <summary>
+                a<sup>n</sup>b<sup>2n</sup> JSON
+              </summary>
+              <pre
+              >
+{
+  "description": "PDA for a^n b^2n i.e. n a's followed by 2n b's",
+  "states": [
+    {
+      "name": "empty",
+      "accept": true
+    },
+    {
+      "name": "eat a's",
+      "accept": false
+    },
+    {
+      "name": "eat b's",
+      "accept": true
+    }
+  ],
+  "transitions": [
+    {
+      "from": "empty",
+      "to": "eat a's",
+      "input": "a",
+      "push": [
+        "a",
+        "a"
+      ],
+      "pop": []
+    },
+    {
+      "from": "eat a's",
+      "to": "eat a's",
+      "input": "a",
+      "push": [
+        "a",
+        "a"
+      ],
+      "pop": []
+    },
+    {
+      "from": "eat a's",
+      "to": "eat b's",
+      "input": "b",
+      "push": [],
+      "pop": [
+        "a"
+      ]
+    },
+    {
+      "from": "eat b's",
+      "to": "eat b's",
+      "input": "b",
+      "push": [],
+      "pop": [
+        "a"
+      ]
+    }
+  ],
+  "start": "empty"
+}
+          </pre
+              >
+            </details>
+          </div>
+          <h1 id="the-math">The Math</h1>
+          <p>
+            We’re on the home stretch. Unfortunately, this is the stretch where
+            I am the least help. I want to provide some familiarity with the
+            formalism of state machines so that outside reading won’t look like
+            hieroglyphics. I can’t, however, cover the entire foundation of
+            computer science conventions. I assume familiarity with mathematical
+            functions and the first 15 minutes of set theoretic conventions. No
+            one is more disappointed about it than me. Sorry :’(.
+          </p>
+          <h2 id="input">Input</h2>
+          <p>
+            We’ve been especially vague about what input is. The definition up
+            until now has been “any text at all”. No longer. Formally, the input
+            is a <em>string</em> consisting of zero or more characters from a
+            finite set
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Σ</mi><annotation encoding="application/x-tex"
+                >\Sigma</annotation></semantics></math>, called the <em>input
+              alphabet</em>. Only elements of
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Σ</mi><annotation encoding="application/x-tex"
+                >\Sigma</annotation></semantics></math>
+            may appear in the input.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>So no trash rule.</span>
+            </div>
+          </div>
+          <p>
+            Correct. There is a similar set
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Γ</mi><annotation encoding="application/x-tex"
+                >\Gamma</annotation></semantics></math>
+            called the <em>stack alphabet</em>, with one additional requirement:
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mrow><mi>Z</mi><mo>∈</mo><mi>Γ</mi></mrow><annotation
+                  encoding="application/x-tex"
+                >Z\in\Gamma</annotation></semantics></math>.
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Z</mi><annotation encoding="application/x-tex"
+                >Z</annotation></semantics></math>
+            is how we denote the an empty stack. This has the corollary that
+            every PDA will push a
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Z</mi><annotation encoding="application/x-tex"
+                >Z</annotation></semantics></math>
+            somewhere early on and check for <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Z</mi><annotation encoding="application/x-tex"
+                >Z</annotation></semantics></math> near the end. Only elements
+            of
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Γ</mi><annotation encoding="application/x-tex"
+                >\Gamma</annotation></semantics></math>
+            may appear in the stack. Finally, the set of all inputs accepted by
+            the PDA is called the <em>language</em>
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>L</mi><annotation encoding="application/x-tex"
+                >L</annotation></semantics></math>.
+          </p>
+          <h2 id="states">States</h2>
+          <p>
+            States are modelled as a finite set
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>Q</mi><annotation encoding="application/x-tex"
+                >Q</annotation></semantics></math>. Conventionally, the start
+            state is unambiguously labelled
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><msub><mi>q</mi><mn>0</mn></msub><annotation
+                  encoding="application/x-tex"
+                >q_0</annotation></semantics></math>
+            with the requirement
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mrow><msub><mi>q</mi><mn>0</mn></msub><mo>∈</mo><mi
+                  >Q</mi></mrow><annotation encoding="application/x-tex"
+                >q_0\in Q</annotation></semantics></math>. Accepting states are
+            also modelled as a finite set
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>F</mi><annotation encoding="application/x-tex"
+                >F</annotation></semantics></math>
+            with the requirement
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mrow><mi>F</mi><mo>⊆</mo><mi>Q</mi></mrow><annotation
+                  encoding="application/x-tex"
+                >F\subseteq Q</annotation></semantics></math>. The collection of
+            rejecting states doesn’t usually get an explicit name but can be
+            inferred with
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mrow><mi>Q</mi><mo>\</mo><mi>F</mi></mrow><annotation
+                  encoding="application/x-tex"
+                >Q\setminus F</annotation></semantics></math>.
+          </p>
+          <h2 id="transitions">Transitions</h2>
+          <p>
+            Not gonna lie, the formalism for transitions is straight up awful.
+            Transitions are modelled by the <em>transition function</em>
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mrow><mi>δ</mi><mo>:</mo><mi>Q</mi><mo>×</mo><mi>Σ</mi
+                  ><mo>×</mo><mi>Γ</mi><mo>→</mo><mi>𝒫</mi><mrow><mo
+                      stretchy="true"
+                      form="prefix"
+                    >(</mo><mi>Q</mi><mo>×</mo><mi>Γ</mi><mo
+                      stretchy="true"
+                      form="postfix"
+                    >)</mo></mrow></mrow><annotation
+                  encoding="application/x-tex"
+                >\delta : Q\times \Sigma \times \Gamma \rightarrow
+                  \mathcal{P}(Q\times \Gamma)</annotation></semantics></math>
+            where
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mrow><mi>𝒫</mi><mrow><mo stretchy="true" form="prefix"
+                    >(</mo><mi>X</mi><mo stretchy="true" form="postfix"
+                    >)</mo></mrow></mrow><annotation
+                  encoding="application/x-tex"
+                >\mathcal{P}(X)</annotation></semantics></math>
+            is the set of all subsets of
+            <math
+              display="inline"
+              xmlns="http://www.w3.org/1998/Math/MathML"
+            ><semantics><mi>X</mi><annotation encoding="application/x-tex"
+                >X</annotation></semantics></math>. That is to say transitions
+            are modelled by a function that takes a state, an input character,
+            and a stack character and returns the corresponding destination
+            state and stack operation.
+          </p>
+          <div class="nibbles">
+            <div class="nibbles-content">
+              <img class="nibbles-img" src="../assets/doom.svg" />
+              <span>I love it.</span>
+            </div>
+          </div>
+          <p>I hate it.</p>
+        </div>
+      </div>
     </div>
   </body>
 </html>
