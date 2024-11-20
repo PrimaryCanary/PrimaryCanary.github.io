@@ -1,3 +1,14 @@
+.root {
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.inter-unique {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 100;
+  font-style: normal;
+}
+
 .navbar {
   display: flex;
   justify-content: left;

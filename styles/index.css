@@ -9,6 +9,11 @@
   border: 10px;
   border-color: black;
   padding-right: 10px;
+  white-space: nowrap;
+}
+
+.sidebar textarea {
+  width: 100%;
 }
 
 #simulator-wrapper {
