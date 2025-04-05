@@ -1,10 +1,13 @@
-.PHONY: build
-build:
-	go build
+.PHONY: all
+all: run-loxogon
 
 .PHONY: run
-run: build
-	./main
+run-loxogon: loxogon
+	cd loxogon && "./loxogon"
+
+.PHONY: loxogon
+loxogon:
+	go build -C loxogon
 
 .PHONY: build-dll
 build-dll:
