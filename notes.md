@@ -6,3 +6,13 @@ Make, bash for wrapper scripts, IML (not sure what that is, something for Intell
 Committed.
 3) Do the same thing for C. To get some practice with pointers, define a doubly linked list of heap-allocated strings. Write functions to insert, find, and delete items from it. Test them.
 This sucked ass. Committed
+
+# A Map of the Territory
+This talked about the various types of interpreters and compilers (tree-walk, bytecode, JIT). All at a high level. Not much interesting here except that one sidenote about a dude dying in a biker bar.
+## Challenges
+1) Download the source of a popular programming language and find it's lexer and parser.
+Go: It's handwritten lexers and parsers. The tokens, as of 1647896aa227d8546de3dbe70a5049eecee964e3, live in `src/go/token/token.go`. It does this really funny thing where it uses `iota` to mark where certain token types begin and end then compares against those integers. It's lexer is in `src/scanner/scanner.go`. It's parser is in `src/parser/parser.go`.
+2) JIT compilation tends to be the fastest way to interpret languages. Why doesn't every language use one?
+Because they're wildly complex, take a million engineering-hours, and you get security issues when you screw it up. The fundamental idea is also taking some flak these days with research that says they never reach a steady state.
+3) Most Lisp languages that compile to C also have a Lisp interpreter included. Why?
+Lisp has a bunch of runtime code generation with its macros that need an on-demand interpreter.
