@@ -1,0 +1,14 @@
+// this is a comment
+(( )){} // grouping stuff
+!*+-/=<> <= == // operators
+"string literal"
+"multiline
+  string literal"
+01234 45.67
+0123.
+.9897
+
+id _ident _978indent _asd_ident
+
+and class else false fun for if nil or print return super this true var while
+nile an _class

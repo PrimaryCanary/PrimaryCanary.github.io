@@ -26,4 +26,11 @@ I'm looking forward to this classes vs prototypes description. I've read it. I'm
 
 ## Challenges
 TODO do these. I don't want to right now. Seems boring.
-TODO do these. I don't want to right now. Seems boring.
+
+# A Tree Walk Interpreter
+Nothing here
+
+# Scanning
+Committed.
+TODO fix the global error handling. It's so bad but so nice lol.
+TODO Native testing instead of manually inspecting
