@@ -1,4 +1,4 @@
-package Token
+package token
 
 import "fmt"
 
@@ -104,6 +104,10 @@ var token_names = [...]string{
 	"EOF",
 }
 
+func (t TokenType) String() string {
+	return token_names[t]
+}
+
 type Token struct {
 	Ty      TokenType
 	Lexeme  string
@@ -112,5 +116,5 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%s %s %v", token_names[t.Ty], t.Lexeme, t.Literal)
+	return fmt.Sprintf("%s %s %v", t.Ty, t.Lexeme, t.Literal)
 }
