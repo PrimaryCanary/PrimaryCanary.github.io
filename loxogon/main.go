@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"loxogon/bad"
 	"loxogon/lexer"
 	"os"
 )
@@ -41,7 +40,10 @@ func runFile(file string) (int, error) {
 
 func run(code string) (int, error) {
 	l := lexer.New(code)
-	toks := l.ScanTokens()
+	toks, err := l.ScanTokens()
+	if err != nil {
+		return 1, err
+	}
 
 	for _, t := range toks {
 		fmt.Println(t)
@@ -60,10 +62,10 @@ func runRepl() (int, error) {
 		if len(line) == 0 {
 			return 0, nil
 		}
-		_, err = run(string(line))
-		if bad.Ok() {
-			//fmt.Fprintf(os.Stderr, "error running code: %s\n", err)
-			bad.Reset()
+		exitCode, err := run(string(line))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error running code: %s\n", err)
+			return exitCode, err
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"loxogon/bad"
+	"fmt"
 	Token "loxogon/token"
 	"strconv"
 )
@@ -32,17 +32,19 @@ var keywords = map[string]Token.TokenType{
 }
 
 func New(source string) Lexer {
-	return Lexer{source: source, tokens: make([]Token.Token, 0, 10), start: 0, current: 0, line: 0}
+	return Lexer{source: source, tokens: make([]Token.Token, 0, 10), start: 0, current: 0, line: 1}
 }
 
-func (l *Lexer) ScanTokens() []Token.Token {
+func (l *Lexer) ScanTokens() ([]Token.Token, error) {
 	for !l.atEnd() {
 		l.start = l.current
-		l.scan()
+		if err := l.scan(); err != nil {
+			return nil, fmt.Errorf("could not lex string: %w", err)
+		}
 	}
 
 	l.tokens = append(l.tokens, Token.Token{Ty: Token.EOF, Lexeme: "", Literal: "", Line: l.line})
-	return l.tokens
+	return l.tokens, nil
 }
 
 func (l *Lexer) atEnd() bool {
@@ -55,7 +57,7 @@ func (l *Lexer) advance() byte {
 	return b
 }
 
-func (l *Lexer) scan() {
+func (l *Lexer) scan() error {
 	c := l.advance()
 	switch c {
 	case '(':
@@ -118,16 +120,21 @@ func (l *Lexer) scan() {
 	case '\n':
 		l.line++
 	case '"':
-		l.string()
+		if err := l.string(); err != nil {
+			return err
+		}
 	default:
 		if isDigit(c) {
-			l.number()
+			if err := l.number(); err != nil {
+				return err
+			}
 		} else if isAlpha(c) {
 			l.identifier()
 		} else {
-			bad.Raise(l.line, "Unexpected character.")
+			return l.error(l.line, "unexpected character")
 		}
 	}
+	return nil
 }
 
 func (l *Lexer) addToken(t Token.TokenType) {
@@ -163,7 +170,7 @@ func (l *Lexer) peekNext() byte {
 	return l.source[l.current+1]
 }
 
-func (l *Lexer) string() {
+func (l *Lexer) string() error {
 	for l.peek() != '"' && !l.atEnd() {
 		if l.peek() == '\n' {
 			l.line++
@@ -171,14 +178,14 @@ func (l *Lexer) string() {
 		l.advance()
 	}
 	if l.atEnd() {
-		bad.Raise(l.line, "Unterminated string.")
-		return
+		return l.error(l.line, "unterminated string")
 	}
 	l.advance()
 	l.addLiteral(Token.STRING, string(l.source[l.start+1:l.current-1]))
+	return nil
 }
 
-func (l *Lexer) number() {
+func (l *Lexer) number() error {
 	for isDigit(l.peek()) {
 		l.advance()
 	}
@@ -190,9 +197,10 @@ func (l *Lexer) number() {
 	}
 	float, err := strconv.ParseFloat(string(l.source[l.start:l.current]), 64)
 	if err != nil {
-		bad.Raise(l.line, "Could not parse number.")
+		return l.error(l.line, "could not parse number")
 	}
 	l.addLiteral(Token.NUMBER, float)
+	return nil
 }
 
 func (l *Lexer) identifier() {
@@ -220,4 +228,8 @@ func isAlpha(char byte) bool {
 
 func isAlphaNumeric(char byte) bool {
 	return isAlpha(char) || isDigit(char)
+}
+
+func (l *Lexer) error(line int, message string) error {
+	return fmt.Errorf("[line %d] %s", line, message)
 }

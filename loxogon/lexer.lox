@@ -12,3 +12,7 @@ id _ident _978indent _asd_ident
 
 and class else false fun for if nil or print return super this true var while
 nile an _class
+
+// Errors, uncomment for tests
+// "asdf
+// asd@asdf
