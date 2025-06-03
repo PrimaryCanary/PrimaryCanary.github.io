@@ -1,13 +1,16 @@
+GO = go.exe
+LOX_BINARY = loxogon.exe
+
 .PHONY: all
 all: run-loxogon
 
 .PHONY: run
 run-loxogon: loxogon
-	cd loxogon && "./loxogon"
+	cd loxogon && "./$(LOX_BINARY)" lexer.lox
 
 .PHONY: loxogon
 loxogon:
-	go build -C loxogon
+	$(GO) build -C loxogon
 
 .PHONY: build-dll
 build-dll:

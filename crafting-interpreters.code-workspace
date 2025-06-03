@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "path": "loxogon"
+    },
+    {
+      "path": "doubly-linked-list"
+    },
+    {
+      "path": ".devcontainer"
+    }
+  ]
+}

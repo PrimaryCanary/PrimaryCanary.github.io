@@ -2,7 +2,5 @@
     "makefile.configureOnOpen": true,
     "cmake.sourceDirectory": "/workspaces/crafting-interpreters/doubly-linked-list",
     "cmake.buildDirectory": "/workspaces/crafting-interpreters/doubly-linked-list/build",
-    "files.associations": {
-        "stdio.h": "c"
-    }
+    "cmake.ignoreCMakeListsMissing": true
 }
