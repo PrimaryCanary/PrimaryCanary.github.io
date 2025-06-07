@@ -87,4 +87,14 @@ class Transition {
     this.push = push;
     this.pop = pop;
   }
+
+  toString() {
+    const push = this.push.join("");
+    const pop = this.pop.join("");
+    return `${this.input},${push || "ε"},${pop || "ε"}`;
+  }
+
+  toId() {
+    return `${this.from.name}-${this.to.name}-${this.toString()}`;
+  }
 }
