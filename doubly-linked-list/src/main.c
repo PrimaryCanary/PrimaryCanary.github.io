@@ -19,8 +19,8 @@ Node *new_node(char *str)
 {
     size_t len = strlen(str);
     char *s = malloc(len + 1);
+    Node *n = malloc(sizeof(Node));
     memcpy(s, str, len + 1);
-    Node *n = malloc(sizeof *n);
     n->str = s;
     n->next = NULL;
     n->prev = NULL;
@@ -33,11 +33,11 @@ void free_node(Node *n)
     free(n);
 }
 
-Dll *new_dll(void)
+Dll new_dll(void)
 {
-    Dll *d = malloc(sizeof *d);
-    d->head = NULL;
-    d->tail = NULL;
+    Dll d;
+    d.head = NULL;
+    d.tail = NULL;
     return d;
 }
 
@@ -50,7 +50,7 @@ void free_dll(Dll *d)
         free(n);
         n = next;
     }
-    free(d);
+    // free(d);
     // free(d);
 }
 
@@ -84,27 +84,27 @@ void insert_back(Dll *d, char *str)
     d->tail = n;
 }
 
-void print_dll_forward(Dll *d)
+void print_dll_forward(Dll d)
 {
-    for (Node *n = d->head; n; n = n->next)
+    for (Node *n = d.head; n; n = n->next)
     {
         printf("%s ", n->str);
     }
     printf("\n");
 }
 
-void print_dll_backward(Dll *d)
+void print_dll_backward(Dll d)
 {
-    for (Node *n = d->tail; n; n = n->prev)
+    for (Node *n = d.tail; n; n = n->prev)
     {
         printf("%s ", n->str);
     }
     printf("\n");
 }
 
-Node *find(Dll *d, char *str)
+Node *find(Dll d, char *str)
 {
-    for (Node *n = d->head; n; n = n->next)
+    for (Node *n = d.head; n; n = n->next)
     {
         if (!strcmp(str, n->str))
         {
@@ -120,19 +120,23 @@ void delete(Dll *d, char *str)
     {
         if (!strcmp(str, n->str))
         {
-            if (n->prev && n->next) {
-                n->prev = n->next;
+            if (n->next)
+            {
                 n->next->prev = n->prev;
-            } else if (n->prev && !n->next) {
-                d->tail = n->prev;
-                n->prev->next = NULL;
-            } else if(!n->prev && n->next) {
-                d->head = n->next;
-                n->next->prev = NULL;
-            } else {
-                d->head = NULL;
-                d->tail = NULL;
             }
+            if (n->prev)
+            {
+                n->prev->next = n->next;
+            }
+            if (n == d->head)
+            {
+                d->head = n->next;
+            }
+            if (n == d->tail)
+            {
+                d->tail = n->prev;
+            }
+
             free_node(n);
             return;
         }
@@ -146,27 +150,27 @@ int main(void)
     free_node(n);
     // printf("%s\n", n->str);
 
-    Dll *d = new_dll();
-    free_dll(d);
+    Dll d = new_dll();
+    free_dll(&d);
 
     d = new_dll();
     print_dll_forward(d);
     print_dll_backward(d);
-    insert_front(d, "1");
-    insert_front(d, "2");
-    insert_front(d, "3");
+    insert_front(&d, "1");
+    insert_front(&d, "2");
+    insert_front(&d, "3");
     print_dll_forward(d);
     print_dll_backward(d);
-    free_dll(d);
+    free_dll(&d);
 
     d = new_dll();
     print_dll_forward(d);
     print_dll_backward(d);
     find(d, "asdf");
-    insert_back(d, "5");
-    insert_back(d, "6");
-    insert_back(d, "7");
-    insert_front(d, "2");
+    insert_back(&d, "5");
+    insert_back(&d, "6");
+    insert_back(&d, "7");
+    insert_front(&d, "2");
     print_dll_forward(d);
     print_dll_backward(d);
     Node *found = find(d, "6");
@@ -187,19 +191,19 @@ int main(void)
     {
         printf("not found\n");
     }
-    delete(d, "asdf");
+    delete(&d, "asdf");
     print_dll_forward(d);
-    delete(d, "2");
+    delete(&d, "2");
     print_dll_forward(d);
-    delete(d, "7");
+    delete(&d, "7");
     print_dll_forward(d);
-    delete(d, "6");
+    delete(&d, "6");
     print_dll_forward(d);
-    delete(d, "5");
+    delete(&d, "5");
     print_dll_forward(d);
-    delete(d, "2");
+    delete(&d, "2");
     print_dll_forward(d);
-    free_dll(d);
+    free_dll(&d);
 
     return 0;
 }
