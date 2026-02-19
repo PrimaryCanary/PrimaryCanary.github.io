@@ -10,14 +10,14 @@ func TestLexer(t *testing.T) {
 	lexerTests := []struct {
 		input          string
 		expectedTokens []struct {
-			expectedType    token.TokenType
+			expectedKind    token.TokenKind
 			expectedLiteral string
 		}
 	}{
 		{
 			input: `(( )){}`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.LEFT_PAREN, ""},
@@ -31,7 +31,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `!*+-/=<> <= ==`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.BANG, ""},
@@ -49,7 +49,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `"string literal"`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.STRING, "string literal"},
@@ -59,7 +59,7 @@ func TestLexer(t *testing.T) {
 			input: `"multiline
   string literal"`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.STRING, "multiline\n  string literal"},
@@ -68,7 +68,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `01234 45.67`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.NUMBER, "1234"},
@@ -78,7 +78,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `0123.`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.NUMBER, "123"},
@@ -88,7 +88,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `.9897`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.DOT, ""},
@@ -98,7 +98,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `id _ident _978indent _asd_ident`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.IDENTIFIER, "id"},
@@ -110,7 +110,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `and class else false fun for if nil or print return super this true var while`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.AND, ""},
@@ -134,7 +134,7 @@ func TestLexer(t *testing.T) {
 		{
 			input: `nile an _class`,
 			expectedTokens: []struct {
-				expectedType    token.TokenType
+				expectedKind    token.TokenKind
 				expectedLiteral string
 			}{
 				{token.IDENTIFIER, "nile"},
@@ -152,7 +152,7 @@ func TestLexer(t *testing.T) {
 				t.Fatalf("ScanTokens failed: %v", err)
 			}
 
-			if tokens[len(tokens)-1].Ty != token.EOF {
+			if tokens[len(tokens)-1].Kind != token.EOF {
 				t.Fatalf("missing EOF at end of input. input=%v", lt.input)
 			}
 			tokens = tokens[:len(tokens)-1]
@@ -166,9 +166,9 @@ func TestLexer(t *testing.T) {
 				tok := tokens[i]
 				tokLit := fmt.Sprintf("%v", tok.Literal)
 
-				if tok.Ty != tt.expectedType {
-					t.Fatalf("tests[%d]: tokentype wrong. expected=%v, got=%v",
-						i, tt.expectedType, tok.Ty)
+				if tok.Kind != tt.expectedKind {
+					t.Fatalf("tests[%d]: token kind wrong. expected=%v, got=%v",
+						i, tt.expectedKind, tok.Kind)
 				}
 
 				if tok.Literal != nil && (tokLit != tt.expectedLiteral) {

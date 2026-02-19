@@ -2,7 +2,7 @@ package token
 
 import "fmt"
 
-type TokenType int
+type TokenKind int
 
 const (
 	// Single-character tokens.
@@ -104,17 +104,17 @@ var token_names = [...]string{
 	"EOF",
 }
 
-func (t TokenType) String() string {
+func (t TokenKind) String() string {
 	return token_names[t]
 }
 
 type Token struct {
-	Ty      TokenType
+	Kind    TokenKind
 	Lexeme  string
 	Literal any
 	Line    int
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%s %s %v", t.Ty, t.Lexeme, t.Literal)
+	return fmt.Sprintf("%s %s %v", t.Kind, t.Lexeme, t.Literal)
 }

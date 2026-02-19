@@ -12,7 +12,7 @@ type Lexer struct {
 	start, current, line int
 }
 
-var keywords = map[string]token.TokenType{
+var keywords = map[string]token.TokenKind{
 	"and":    token.AND,
 	"class":  token.CLASS,
 	"else":   token.ELSE,
@@ -43,7 +43,7 @@ func (l *Lexer) ScanTokens() ([]token.Token, error) {
 		}
 	}
 
-	l.tokens = append(l.tokens, token.Token{Ty: token.EOF, Lexeme: "", Literal: "", Line: l.line})
+	l.tokens = append(l.tokens, token.Token{Kind: token.EOF, Lexeme: "", Literal: "", Line: l.line})
 	return l.tokens, nil
 }
 
@@ -137,13 +137,13 @@ func (l *Lexer) scan() error {
 	return nil
 }
 
-func (l *Lexer) addToken(t token.TokenType) {
-	l.addLiteral(t, nil)
+func (l *Lexer) addToken(k token.TokenKind) {
+	l.addLiteral(k, nil)
 }
 
-func (l *Lexer) addLiteral(t token.TokenType, literal any) {
+func (l *Lexer) addLiteral(k token.TokenKind, literal any) {
 	text := l.source[l.start:l.current]
-	l.tokens = append(l.tokens, token.Token{Ty: t, Literal: literal, Lexeme: text, Line: l.line})
+	l.tokens = append(l.tokens, token.Token{Kind: k, Literal: literal, Lexeme: text, Line: l.line})
 }
 
 func (l *Lexer) match(expected byte) bool {
@@ -210,11 +210,11 @@ func (l *Lexer) identifier() {
 	}
 
 	text := string(l.source[l.start:l.current])
-	ty, ok := keywords[text]
+	kind, ok := keywords[text]
 	if !ok {
-		ty = token.IDENTIFIER
+		kind = token.IDENTIFIER
 	}
-	l.addToken(ty)
+	l.addToken(kind)
 }
 
 func isDigit(char byte) bool {
