@@ -4,7 +4,7 @@ LOX_BINARY = loxogon.exe
 .PHONY: all
 all: run-loxogon
 
-.PHONY: run
+.PHONY: run-loxogon
 run-loxogon: loxogon
 	cd loxogon && "./$(LOX_BINARY)" lexer.lox
 

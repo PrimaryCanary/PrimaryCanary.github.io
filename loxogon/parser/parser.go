@@ -22,102 +22,143 @@ type Expr struct {
 	Children []Expr
 }
 
-func (e Expr) String() string {
-	switch e.Kind {
-	case BINARY:
-		return fmt.Sprintf("(%s %s %v)", e.Operator.Lexeme, e.Children[0], e.Children[1])
-	case UNARY:
-		return fmt.Sprintf("(%s %v)", e.Operator.Lexeme, e.Children[0])
-	case LITERAL:
-		return fmt.Sprint(e.Data)
-	case GROUPING:
-		return fmt.Sprintf("(group %v)", e.Children[0])
-	}
-	return ""
-}
-
 type parser struct {
 	tokens  []token.Token
 	current int
 }
 
+// Parses a set of tokens into an AST.
+//
+// Lox ENBF grammar:
+//
+// expression     → equality ;
+// equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+// comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+// term           → factor ( ( "-" | "+" ) factor )* ;
+// factor         → unary ( ( "/" | "*" ) unary )* ;
+// unary          → ( "!" | "-" ) unary | primary ;
+// primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
 func Parse(tokens []token.Token) (Expr, error) {
 	p := parser{tokens: tokens, current: 0}
-	return p.expression(), nil
+	return p.expression()
 }
 
-func (p *parser) expression() Expr {
+// expression → equality
+func (p *parser) expression() (Expr, error) {
 	return p.equality()
 }
 
-func (p *parser) leftAssocBinaryExpr(operand func() Expr, kinds ...token.TokenKind) Expr {
-	left := operand()
+func (p *parser) leftAssocBinaryExpr(operand func() (Expr, error), kinds ...token.TokenKind) (Expr, error) {
+	left, err := operand()
+	if err != nil {
+		return Expr{}, err
+	}
 	for p.match(kinds...) {
 		operator := p.previous()
-		right := operand()
-		left = NewBinary(operator, left, right)
+		right, err := operand()
+		if err != nil {
+			return Expr{}, err
+		}
+		left = newBinary(operator, left, right)
 	}
-	return left
+	return left, nil
 }
 
-func (p *parser) equality() Expr {
+// equality → comparison ( ( "!=" | "==" ) comparison )*
+func (p *parser) equality() (Expr, error) {
 	return p.leftAssocBinaryExpr(p.comparison, token.BANG_EQUAL, token.EQUAL_EQUAL)
 }
 
-func (p *parser) comparison() Expr {
+// comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+func (p *parser) comparison() (Expr, error) {
 	return p.leftAssocBinaryExpr(p.term, token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL)
 }
 
-func (p *parser) term() Expr {
+// term → factor ( ( "-" | "+" ) factor )*
+func (p *parser) term() (Expr, error) {
 	return p.leftAssocBinaryExpr(p.factor, token.MINUS, token.PLUS)
 }
 
-func (p *parser) factor() Expr {
+// factor → unary ( ( "/" | "*" ) unary )*
+func (p *parser) factor() (Expr, error) {
 	return p.leftAssocBinaryExpr(p.unary, token.STAR, token.SLASH)
 }
 
-func (p *parser) unary() Expr {
+// unary → ( "!" | "-" ) unary | primary
+func (p *parser) unary() (Expr, error) {
 	if p.match(token.BANG, token.MINUS) {
 		operator := p.previous()
-		right := p.unary()
-		return NewUnary(operator, right)
+		right, err := p.unary()
+		if err != nil {
+			return Expr{}, err
+		}
+		return newUnary(operator, right), nil
 	}
 	return p.primary()
 }
 
-func (p *parser) primary() Expr {
+// primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+func (p *parser) primary() (Expr, error) {
 	if p.match(token.NUMBER, token.STRING) {
 		data := p.previous().Literal
-		return NewLiteral(data)
+		return newLiteral(data), nil
 	}
 	if p.match(token.TRUE) {
-		return NewLiteral(true)
+		return newLiteral(true), nil
 	}
 	if p.match(token.FALSE) {
-		return NewLiteral(false)
+		return newLiteral(false), nil
 	}
 	if p.match(token.NIL) {
-		return NewLiteral(nil)
+		return newLiteral(nil), nil
 	}
 	if p.match(token.LEFT_PAREN) {
-		expr := p.expression()
-		// TODO error handling
-		p.match(token.RIGHT_PAREN)
-		return NewGrouping(expr)
+		expr, err := p.expression()
+		if err != nil {
+			return Expr{}, err
+		}
+		_, err = p.consume(token.RIGHT_PAREN, "expected ')' after expression")
+		if err != nil {
+			return Expr{}, err
+		}
+		return newGrouping(expr), nil
 	}
 
-	panic("TODO error handling in the parser")
-	// return Expr{} // Unreachable, TODO panic
+	return Expr{}, parseError(p.peek(), "expected expression")
 }
 
+// Check if the current token is the same as the argument.
+func (p *parser) check(kind token.TokenKind) bool {
+	return !p.atEnd() && (kind == p.peek().Kind)
+}
+
+// Check if the current token is the same as one of the arguments and advance if necessary.
 func (p *parser) match(kinds ...token.TokenKind) bool {
 	for _, k := range kinds {
-		if (k == p.peek().Kind) && !p.atEnd() {
+		if p.check(k) {
 			p.advance()
 			return true
 		}
 	}
 	return false
+}
+
+// Check if the current token is the same as the argument and advance if necessary.
+// A failed match is an error.
+func (p *parser) consume(kind token.TokenKind, message string) (token.Token, error) {
+	if p.check(kind) {
+		return p.advance(), nil
+	}
+	return token.Token{}, parseError(p.peek(), message)
+}
+
+func parseError(tok token.Token, message string) error {
+	if tok.Kind == token.EOF {
+		return fmt.Errorf("[line %v] Parse error at end of input: %v",
+			tok.Line, message)
+	}
+	return fmt.Errorf("[line %v] Parse error at '%v': %v",
+		tok.Line, tok.Lexeme, message)
 }
 
 func (p *parser) peek() token.Token {
@@ -139,18 +180,32 @@ func (p *parser) atEnd() bool {
 	return p.peek().Kind == token.EOF
 }
 
-func NewLiteral(data any) Expr {
+func newLiteral(data any) Expr {
 	return Expr{Kind: LITERAL, Data: data}
 }
 
-func NewBinary(operator token.Token, left, right Expr) Expr {
+func newBinary(operator token.Token, left, right Expr) Expr {
 	return Expr{Kind: BINARY, Operator: operator, Children: []Expr{left, right}}
 }
 
-func NewUnary(operator token.Token, e Expr) Expr {
+func newUnary(operator token.Token, e Expr) Expr {
 	return Expr{Kind: UNARY, Operator: operator, Children: []Expr{e}}
 }
 
-func NewGrouping(e Expr) Expr {
+func newGrouping(e Expr) Expr {
 	return Expr{Kind: GROUPING, Children: []Expr{e}}
+}
+
+func (e Expr) String() string {
+	switch e.Kind {
+	case BINARY:
+		return fmt.Sprintf("(%s %s %v)", e.Operator.Lexeme, e.Children[0], e.Children[1])
+	case UNARY:
+		return fmt.Sprintf("(%s %v)", e.Operator.Lexeme, e.Children[0])
+	case LITERAL:
+		return fmt.Sprint(e.Data)
+	case GROUPING:
+		return fmt.Sprintf("(group %v)", e.Children[0])
+	}
+	return ""
 }

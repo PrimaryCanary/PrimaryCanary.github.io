@@ -73,6 +73,7 @@ func Evaluate(expr parser.Expr) (LoxObject, error) {
 			}
 			return LoxObject{l * r}, nil
 		case token.SLASH:
+			// TODO divide by zero
 			l, r, err := operandsToNumbers(expr.Operator, left, right)
 			if err != nil {
 				return LoxObject{}, err

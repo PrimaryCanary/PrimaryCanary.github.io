@@ -76,7 +76,8 @@ func runRepl() (int, error) {
 		result, _, err := run(string(trimmed))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
+		} else {
+			fmt.Println(result)
 		}
-		fmt.Println(result)
 	}
 }
