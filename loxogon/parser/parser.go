@@ -27,6 +27,11 @@ type parser struct {
 	current int
 }
 
+type ParseError struct {
+	token   token.Token
+	message string
+}
+
 // Parses a set of tokens into an AST.
 //
 // Lox ENBF grammar:
@@ -117,6 +122,7 @@ func (p *parser) primary() (Expr, error) {
 		if err != nil {
 			return Expr{}, err
 		}
+		// TODO fix bug with trailing right parens e.g. (5)))
 		_, err = p.consume(token.RIGHT_PAREN, "expected ')' after expression")
 		if err != nil {
 			return Expr{}, err
@@ -124,7 +130,7 @@ func (p *parser) primary() (Expr, error) {
 		return newGrouping(expr), nil
 	}
 
-	return Expr{}, parseError(p.peek(), "expected expression")
+	return Expr{}, ParseError{p.peek(), "expected expression"}
 }
 
 // Check if the current token is the same as the argument.
@@ -149,16 +155,7 @@ func (p *parser) consume(kind token.TokenKind, message string) (token.Token, err
 	if p.check(kind) {
 		return p.advance(), nil
 	}
-	return token.Token{}, parseError(p.peek(), message)
-}
-
-func parseError(tok token.Token, message string) error {
-	if tok.Kind == token.EOF {
-		return fmt.Errorf("[line %v] Parse error at end of input: %v",
-			tok.Line, message)
-	}
-	return fmt.Errorf("[line %v] Parse error at '%v': %v",
-		tok.Line, tok.Lexeme, message)
+	return token.Token{}, ParseError{p.peek(), message}
 }
 
 func (p *parser) peek() token.Token {
@@ -208,4 +205,13 @@ func (e Expr) String() string {
 		return fmt.Sprintf("(group %v)", e.Children[0])
 	}
 	return ""
+}
+
+func (pe ParseError) Error() string {
+	if pe.token.Kind == token.EOF {
+		return fmt.Sprintf("[line %v] Parse error at end of input: %v",
+			pe.token.Line, pe.message)
+	}
+	return fmt.Sprintf("[line %v] Parse error at '%v': %v",
+		pe.token.Line, pe.token.Lexeme, pe.message)
 }
