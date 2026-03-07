@@ -3,8 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"loxogon/interpreter"
 	"loxogon/lexer"
+	"loxogon/parser"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -12,7 +15,7 @@ func main() {
 		fmt.Println("Usage: loxogon [script]")
 		os.Exit(64)
 	} else if len(os.Args) == 2 {
-		exit, err := runFile(os.Args[1])
+		_, exit, err := runFile(os.Args[1])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "running script failed: %s\n", err)
 			os.Exit(exit)
@@ -30,25 +33,32 @@ func main() {
 	}
 }
 
-func runFile(file string) (int, error) {
+func runFile(file string) (interpreter.LoxObject, int, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
-		return 1, fmt.Errorf("could not read file: %w", err)
+		return interpreter.LoxObject{}, 1, fmt.Errorf("could not read file: %w", err)
 	}
 	return run(string(bytes))
 }
 
-func run(code string) (int, error) {
+func run(code string) (interpreter.LoxObject, int, error) {
 	l := lexer.New(code)
 	toks, err := l.ScanTokens()
 	if err != nil {
-		return 1, err
+		return interpreter.LoxObject{}, 1, err
 	}
 
-	for _, t := range toks {
-		fmt.Println(t)
+	ast, err := parser.Parse(toks)
+	if err != nil {
+		return interpreter.LoxObject{}, 2, err
 	}
-	return 0, nil
+
+	result, err := interpreter.Evaluate(ast)
+	if err != nil {
+		return interpreter.LoxObject{}, 3, err
+	}
+
+	return result, 0, nil
 }
 
 func runRepl() (int, error) {
@@ -59,13 +69,14 @@ func runRepl() (int, error) {
 		if err != nil {
 			return 1, fmt.Errorf("could not read line: %w", err)
 		}
-		if len(line) == 0 {
+		trimmed := strings.TrimSpace(string(line))
+		if len(trimmed) == 0 {
 			return 0, nil
 		}
-		exitCode, err := run(string(line))
+		result, _, err := run(string(trimmed))
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error running code: %s\n", err)
-			return exitCode, err
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 		}
+		fmt.Println(result)
 	}
 }
