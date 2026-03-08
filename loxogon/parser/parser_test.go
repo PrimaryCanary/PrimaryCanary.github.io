@@ -16,14 +16,44 @@ func TestParser_Parse(t *testing.T) {
 	}{
 		{
 			name:    "expressions",
-			source:  "(5 - (3 - 1)) + -1",
-			wantStr: "(+ (group (- 5 (group (- 3 1)))) (- 1))",
+			source:  "(5 - (3 - 1)) + -1;",
+			wantStr: "(+ (group (- 5 (group (- 3 1)))) (- 1));",
 			wantErr: nil,
 		},
 		{
 			name:    "expressions with decimals",
-			source:  "(5.6 / (3 - 1.1)) + -1",
-			wantStr: "(+ (group (/ 5.6 (group (- 3 1.1)))) (- 1))",
+			source:  "(5.6 / (3 - 1.1)) + -1;",
+			wantStr: "(+ (group (/ 5.6 (group (- 3 1.1)))) (- 1));",
+			wantErr: nil,
+		},
+		{
+			name:    "Uninitialized variable",
+			source:  "var a;",
+			wantStr: "(var a);",
+			wantErr: nil,
+		},
+		{
+			name:    "Initialized variable",
+			source:  "var b=1;",
+			wantStr: "(var b=1);",
+			wantErr: nil,
+		},
+		{
+			name:    "List of statements",
+			source:  "var a; var b;",
+			wantStr: "(var a);(var b);",
+			wantErr: nil,
+		},
+		{
+			name:    "Print statement",
+			source:  "print true;",
+			wantStr: "(print true);",
+			wantErr: nil,
+		},
+		{
+			name:    "Print expressions",
+			source:  "var a=1; var b=3; print a > b;",
+			wantStr: "(var a=1);(var b=3);(print (> a b));",
 			wantErr: nil,
 		},
 	}
@@ -35,13 +65,17 @@ func TestParser_Parse(t *testing.T) {
 				t.Errorf("improperly lexed source: %v", err)
 			}
 
-			gotExpr, gotErrs := Parse(toks)
-			gotStr := gotExpr.String()
-			if !(strings.Compare(gotStr, tt.wantStr) == 0) {
-				t.Errorf("Parse() gotExpr = \n%v\n, want \n%v\n", gotStr, tt.wantStr)
-			}
+			gotStmts, gotErrs := Parse(toks)
 			if !reflect.DeepEqual(gotErrs, tt.wantErr) {
 				t.Errorf("Parse() gotErrs = %v, want %v", gotErrs, tt.wantErr)
+			}
+			var sb strings.Builder
+			for _, stmt := range gotStmts {
+				sb.WriteString(stmt.String())
+			}
+			gotStr := sb.String()
+			if !(strings.Compare(gotStr, tt.wantStr) == 0) {
+				t.Errorf("Parse() gotExpr = \n%v\n, want \n%v\n", gotStr, tt.wantStr)
 			}
 		})
 	}
