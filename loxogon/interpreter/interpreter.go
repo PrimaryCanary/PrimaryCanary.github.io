@@ -151,7 +151,7 @@ func (i *Interpreter) EvaluateStmt(stmt parser.Stmt) (LoxObject, error) {
 		if err != nil {
 			return LoxObject{}, err
 		}
-		i.env.Define(stmt.Name.Lexeme, value)
+		i.env.Define(stmt.Name.Lexeme, value.Value)
 		return LoxObject{}, nil
 	}
 
