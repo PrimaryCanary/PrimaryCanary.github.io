@@ -24,7 +24,7 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 		if err != nil {
 			return ast.LoxObject{}, err
 		}
-		return ast.LoxObject{Value: value}, nil
+		return value, nil
 	case ast.GROUPING:
 		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {
@@ -139,14 +139,14 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
 		}
 		return ast.LoxObject{}, nil
 	case ast.VAR_UNINIT:
-		i.env.Define(stmt.Name.Lexeme, nil)
+		i.env.Define(stmt.Name.Lexeme, ast.LoxObject{})
 		return ast.LoxObject{}, nil
 	case ast.VAR:
 		value, err := i.Evaluate(stmt.Child)
 		if err != nil {
 			return ast.LoxObject{}, err
 		}
-		i.env.Define(stmt.Name.Lexeme, value.Value)
+		i.env.Define(stmt.Name.Lexeme, value)
 		return ast.LoxObject{}, nil
 	}
 
@@ -182,6 +182,8 @@ func operandToNumber(operator ast.Token, operand ast.LoxObject) (float64, error)
 	if v, ok := operand.Value.(float64); ok {
 		return v, nil
 	}
+
+	// TODO return concrete error
 	return 0, fmt.Errorf("[line %v] Runtime error: operator '%v' requires numeric operand, got %v",
 		operator.Line, operator.Lexeme, operand)
 }
@@ -192,6 +194,8 @@ func operandsToNumbers(operator ast.Token, left, right ast.LoxObject) (float64, 
 	if leftOk && rightOk {
 		return l, r, nil
 	}
+
+	// TODO return concrete error
 	err := fmt.Errorf("[line %v] Runtime error: operator '%v' requires numeric operands, got %v and %v",
 		operator.Line, operator.Lexeme, left, right)
 	return 0, 0, err
@@ -203,6 +207,8 @@ func operandsToStrings(operator ast.Token, left, right ast.LoxObject) (string, s
 	if leftOk && rightOk {
 		return l, r, nil
 	}
+
+	// TODO return concrete error
 	err := fmt.Errorf("[line %v] Runtime error: operator '%v' requires string operands, got %v and %v",
 		operator.Line, operator.Lexeme, left, right)
 	return "", "", err

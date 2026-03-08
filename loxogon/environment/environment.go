@@ -6,7 +6,7 @@ import (
 )
 
 type Env struct {
-	Bindings map[string]any
+	Bindings map[string]ast.LoxObject
 }
 
 type UndefVarError struct {
@@ -14,18 +14,18 @@ type UndefVarError struct {
 }
 
 func New() Env {
-	return Env{Bindings: make(map[string]any)}
+	return Env{Bindings: make(map[string]ast.LoxObject)}
 }
 
-func (e *Env) Define(name string, value any) {
+func (e *Env) Define(name string, value ast.LoxObject) {
 	e.Bindings[name] = value
 }
 
-func (e *Env) Get(name ast.Token) (any, error) {
+func (e *Env) Get(name ast.Token) (ast.LoxObject, error) {
 	if value, ok := e.Bindings[name.Lexeme]; ok {
 		return value, nil
 	}
-	return nil, UndefVarError{token: name}
+	return ast.LoxObject{}, UndefVarError{token: name}
 }
 
 func (uve UndefVarError) Error() string {
