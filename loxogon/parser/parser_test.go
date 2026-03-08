@@ -66,6 +66,7 @@ func TestParser_Parse(t *testing.T) {
 			}
 
 			gotStmts, gotErrs := Parse(toks)
+			// TODO fix DeepEqual on errors
 			if !reflect.DeepEqual(gotErrs, tt.wantErr) {
 				t.Errorf("Parse() gotErrs = %v, want %v", gotErrs, tt.wantErr)
 			}

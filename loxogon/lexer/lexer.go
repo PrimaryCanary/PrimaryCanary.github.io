@@ -195,7 +195,7 @@ func (l *Lexer) identifier() {
 	}
 
 	text := string(l.source[l.start:l.current])
-	kind, ok := ast.Keywords[text]
+	kind, ok := ast.IsKeyword(text)
 	if !ok {
 		kind = ast.IDENTIFIER
 	}

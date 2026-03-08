@@ -104,7 +104,7 @@ var token_names = [...]string{
 	"EOF",
 }
 
-var Keywords = map[string]TokenKind{
+var keywords = map[string]TokenKind{
 	"and":    AND,
 	"class":  CLASS,
 	"else":   ELSE,
@@ -123,6 +123,10 @@ var Keywords = map[string]TokenKind{
 	"while":  WHILE,
 }
 
+func IsKeyword(text string) (TokenKind, bool) {
+	kw, ok := keywords[text]
+	return kw, ok
+}
 func (t TokenKind) String() string {
 	return token_names[t]
 }
