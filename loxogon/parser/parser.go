@@ -22,7 +22,7 @@ const (
 // Fat struct representation of expressions
 type Expr struct {
 	Kind     ExprKind
-	Operator token.Token
+	Tok      token.Token
 	Data     any
 	Children []Expr
 }
@@ -34,12 +34,12 @@ type Stmt struct {
 }
 
 type parser struct {
-	tokens  []token.Token
+	toks    []token.Token
 	current int
 }
 
 type ParseError struct {
-	token   token.Token
+	tok     token.Token
 	message string
 }
 
@@ -58,8 +58,8 @@ type ParseError struct {
 // factor         → unary ( ( "/" | "*" ) unary )* ;
 // unary          → ( "!" | "-" ) unary | primary ;
 // primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
-func Parse(tokens []token.Token) ([]Stmt, error) {
-	p := parser{tokens: tokens, current: 0}
+func Parse(toks []token.Token) ([]Stmt, error) {
+	p := parser{toks: toks, current: 0}
 	statements := make([]Stmt, 0)
 	for !p.atEnd() {
 		stmt, err := p.statement()
@@ -89,7 +89,7 @@ func (p *parser) expressionStatement() (Stmt, error) {
 	if err != nil {
 		return Stmt{}, err
 	}
-	return Stmt{EXPR, expr}, nil
+	return newExprStmt(expr), nil
 }
 
 // printStmt → "print" expression ";" ;
@@ -102,7 +102,7 @@ func (p *parser) printStatement() (Stmt, error) {
 	if err != nil {
 		return Stmt{}, err
 	}
-	return Stmt{PRINT, expr}, nil
+	return newPrintStmt(expr), nil
 }
 
 // expression → equality
@@ -215,11 +215,11 @@ func (p *parser) consume(kind token.TokenKind, message string) (token.Token, err
 }
 
 func (p *parser) peek() token.Token {
-	return p.tokens[p.current]
+	return p.toks[p.current]
 }
 
 func (p *parser) previous() token.Token {
-	return p.tokens[p.current-1]
+	return p.toks[p.current-1]
 }
 
 func (p *parser) advance() token.Token {
@@ -238,23 +238,30 @@ func newLiteral(data any) Expr {
 }
 
 func newBinary(operator token.Token, left, right Expr) Expr {
-	return Expr{Kind: BINARY, Operator: operator, Children: []Expr{left, right}}
+	return Expr{Kind: BINARY, Tok: operator, Children: []Expr{left, right}}
 }
 
 func newUnary(operator token.Token, e Expr) Expr {
-	return Expr{Kind: UNARY, Operator: operator, Children: []Expr{e}}
+	return Expr{Kind: UNARY, Tok: operator, Children: []Expr{e}}
 }
 
 func newGrouping(e Expr) Expr {
 	return Expr{Kind: GROUPING, Children: []Expr{e}}
 }
 
+func newExprStmt(e Expr) Stmt {
+	return Stmt{Kind: EXPR, Child: e}
+}
+
+func newPrintStmt(e Expr) Stmt {
+	return Stmt{Kind: PRINT, Child: e}
+}
 func (e Expr) String() string {
 	switch e.Kind {
 	case BINARY:
-		return fmt.Sprintf("(%s %s %v)", e.Operator.Lexeme, e.Children[0], e.Children[1])
+		return fmt.Sprintf("(%s %s %v)", e.Tok.Lexeme, e.Children[0], e.Children[1])
 	case UNARY:
-		return fmt.Sprintf("(%s %v)", e.Operator.Lexeme, e.Children[0])
+		return fmt.Sprintf("(%s %v)", e.Tok.Lexeme, e.Children[0])
 	case LITERAL:
 		return fmt.Sprint(e.Data)
 	case GROUPING:
@@ -264,10 +271,10 @@ func (e Expr) String() string {
 }
 
 func (pe ParseError) Error() string {
-	if pe.token.Kind == token.EOF {
+	if pe.tok.Kind == token.EOF {
 		return fmt.Sprintf("[line %v] Parse error at end of input: %v",
-			pe.token.Line, pe.message)
+			pe.tok.Line, pe.message)
 	}
 	return fmt.Sprintf("[line %v] Parse error at '%v': %v",
-		pe.token.Line, pe.token.Lexeme, pe.message)
+		pe.tok.Line, pe.tok.Lexeme, pe.message)
 }

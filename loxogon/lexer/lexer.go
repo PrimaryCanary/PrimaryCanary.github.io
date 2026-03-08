@@ -8,7 +8,7 @@ import (
 
 type Lexer struct {
 	source               string
-	tokens               []token.Token
+	toks                 []token.Token
 	start, current, line int
 }
 
@@ -32,7 +32,9 @@ var keywords = map[string]token.TokenKind{
 }
 
 func New(source string) Lexer {
-	return Lexer{source: source, tokens: make([]token.Token, 0, 10), start: 0, current: 0, line: 1}
+	return Lexer{source: source,
+		toks:  make([]token.Token, 0, 10),
+		start: 0, current: 0, line: 1}
 }
 
 func (l *Lexer) ScanTokens() ([]token.Token, error) {
@@ -43,8 +45,10 @@ func (l *Lexer) ScanTokens() ([]token.Token, error) {
 		}
 	}
 
-	l.tokens = append(l.tokens, token.Token{Kind: token.EOF, Lexeme: "", Literal: "", Line: l.line})
-	return l.tokens, nil
+	l.toks = append(l.toks,
+		token.Token{Kind: token.EOF,
+			Lexeme: "", Literal: "", Line: l.line})
+	return l.toks, nil
 }
 
 func (l *Lexer) atEnd() bool {
@@ -143,7 +147,7 @@ func (l *Lexer) addToken(k token.TokenKind) {
 
 func (l *Lexer) addLiteral(k token.TokenKind, literal any) {
 	text := l.source[l.start:l.current]
-	l.tokens = append(l.tokens, token.Token{Kind: k, Literal: literal, Lexeme: text, Line: l.line})
+	l.toks = append(l.toks, token.Token{Kind: k, Literal: literal, Lexeme: text, Line: l.line})
 }
 
 func (l *Lexer) match(expected byte) bool {

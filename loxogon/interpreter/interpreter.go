@@ -28,9 +28,9 @@ func Evaluate(expr parser.Expr) (LoxObject, error) {
 			return LoxObject{}, err
 		}
 
-		switch expr.Operator.Kind {
+		switch expr.Tok.Kind {
 		case token.MINUS:
-			number, err := operandToNumber(expr.Operator, value)
+			number, err := operandToNumber(expr.Tok, value)
 			if err != nil {
 				return LoxObject{}, err
 			}
@@ -48,57 +48,57 @@ func Evaluate(expr parser.Expr) (LoxObject, error) {
 		if err != nil {
 			return LoxObject{}, err
 		}
-		switch expr.Operator.Kind {
+		switch expr.Tok.Kind {
 		case token.PLUS:
-			if l, r, err := operandsToNumbers(expr.Operator, left, right); err == nil {
+			if l, r, err := operandsToNumbers(expr.Tok, left, right); err == nil {
 				return LoxObject{l + r}, nil
-			} else if l, r, err := operandsToStrings(expr.Operator, left, right); err == nil {
+			} else if l, r, err := operandsToStrings(expr.Tok, left, right); err == nil {
 				return LoxObject{l + r}, nil
 			} else {
 				err := fmt.Errorf("[line %v] Runtime error: operator '+' requires number or string operands, got %v and %v",
-					expr.Operator, left, right)
+					expr.Tok, left, right)
 				return LoxObject{}, err
 			}
 
 		case token.MINUS:
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
 			return LoxObject{l - r}, nil
 		case token.STAR:
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
 			return LoxObject{l * r}, nil
 		case token.SLASH:
 			// TODO divide by zero
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
 			return LoxObject{l / r}, nil
 		case token.GREATER:
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
 			return LoxObject{l > r}, nil
 		case token.GREATER_EQUAL:
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
 			return LoxObject{l >= r}, nil
 		case token.LESS:
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
 			return LoxObject{l < r}, nil
 		case token.LESS_EQUAL:
-			l, r, err := operandsToNumbers(expr.Operator, left, right)
+			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return LoxObject{}, err
 			}
@@ -134,7 +134,7 @@ func EvaluateStmt(stmt parser.Stmt) (LoxObject, error) {
 
 // Lox semantics: nil == nil is true, nil == (any value) is false,
 func isEqual(left, right any) bool {
-	// TODO I'm not sure if this is a bug
+	// TODO I'm not sure if this is a bug with nil interfaces
 	if left == nil && right == nil {
 		return true
 	}
