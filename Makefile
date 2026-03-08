@@ -1,16 +1,17 @@
 GO = go.exe
 LOX_BINARY = loxogon.exe
+GOFLAGS = -gcflags="all=-N -l"
 
 .PHONY: all
 all: run-loxogon
 
 .PHONY: run-loxogon
 run-loxogon: loxogon
-	cd loxogon && "./$(LOX_BINARY)" lexer.lox
+	cd loxogon && "./$(LOX_BINARY)"
 
 .PHONY: loxogon
 loxogon:
-	$(GO) build -C loxogon
+	$(GO) build -C loxogon $(GOFLAGS) 
 
 .PHONY: test
 test:
