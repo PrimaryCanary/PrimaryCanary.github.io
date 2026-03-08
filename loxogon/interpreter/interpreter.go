@@ -111,7 +111,25 @@ func Evaluate(expr parser.Expr) (LoxObject, error) {
 	}
 
 	// Unreachable
-	panic("Hit unreachable state in evaluation")
+	panic("Hit unreachable state in expression evaluation")
+}
+
+func EvaluateStmt(stmt parser.Stmt) (LoxObject, error) {
+	switch stmt.Kind {
+	case parser.EXPR:
+		_, err := Evaluate(stmt.Child)
+		return LoxObject{}, err
+	case parser.PRINT:
+		result, err := Evaluate(stmt.Child)
+		if err != nil {
+			return LoxObject{}, err
+		}
+		fmt.Println(result)
+		return LoxObject{}, nil
+	}
+
+	// Unreachable
+	panic("Hit unreachable state in statement evaluation")
 }
 
 // Lox semantics: nil == nil is true, nil == (any value) is false,

@@ -53,9 +53,12 @@ func run(code string) (interpreter.LoxObject, int, error) {
 		return interpreter.LoxObject{}, 2, err
 	}
 
-	result, err := interpreter.Evaluate(ast)
-	if err != nil {
-		return interpreter.LoxObject{}, 3, err
+	var result interpreter.LoxObject
+	for _, stmt := range ast {
+		result, err = interpreter.EvaluateStmt(stmt)
+		if err != nil {
+			return interpreter.LoxObject{}, 3, err
+		}
 	}
 
 	return result, 0, nil

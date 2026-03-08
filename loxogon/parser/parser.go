@@ -6,12 +6,17 @@ import (
 )
 
 type ExprKind int
+type StmtKind int
 
 const (
 	BINARY ExprKind = iota
 	UNARY
 	LITERAL
 	GROUPING
+)
+const (
+	EXPR StmtKind = iota
+	PRINT
 )
 
 // Fat struct representation of expressions
@@ -20,6 +25,12 @@ type Expr struct {
 	Operator token.Token
 	Data     any
 	Children []Expr
+}
+
+// Fat struct representation of expressions
+type Stmt struct {
+	Kind  StmtKind
+	Child Expr
 }
 
 type parser struct {
@@ -36,6 +47,10 @@ type ParseError struct {
 //
 // Lox ENBF grammar:
 //
+// program        → statement* EOF ;
+// statement      → exprStmt | printStmt ;
+// exprStmt       → expression ";" ;
+// printStmt      → "print" expression ";" ;
 // expression     → equality ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -43,9 +58,51 @@ type ParseError struct {
 // factor         → unary ( ( "/" | "*" ) unary )* ;
 // unary          → ( "!" | "-" ) unary | primary ;
 // primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
-func Parse(tokens []token.Token) (Expr, error) {
+func Parse(tokens []token.Token) ([]Stmt, error) {
 	p := parser{tokens: tokens, current: 0}
-	return p.expression()
+	statements := make([]Stmt, 0)
+	for !p.atEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+	return statements, nil
+}
+
+// statement → exprStmt | printStmt ;
+func (p *parser) statement() (Stmt, error) {
+	if p.match(token.PRINT) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+// exprStmt → expression ";" ;
+func (p *parser) expressionStatement() (Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return Stmt{}, err
+	}
+	_, err = p.consume(token.SEMICOLON, "expected ';' after expression")
+	if err != nil {
+		return Stmt{}, err
+	}
+	return Stmt{EXPR, expr}, nil
+}
+
+// printStmt → "print" expression ";" ;
+func (p *parser) printStatement() (Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return Stmt{}, err
+	}
+	_, err = p.consume(token.SEMICOLON, "expected ';' after expression")
+	if err != nil {
+		return Stmt{}, err
+	}
+	return Stmt{PRINT, expr}, nil
 }
 
 // expression → equality
@@ -122,7 +179,6 @@ func (p *parser) primary() (Expr, error) {
 		if err != nil {
 			return Expr{}, err
 		}
-		// TODO fix bug with trailing right parens e.g. (5)))
 		_, err = p.consume(token.RIGHT_PAREN, "expected ')' after expression")
 		if err != nil {
 			return Expr{}, err
