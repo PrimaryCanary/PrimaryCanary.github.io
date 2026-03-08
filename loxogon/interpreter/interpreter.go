@@ -2,28 +2,43 @@ package interpreter
 
 import (
 	"fmt"
+	"loxogon/environment"
 	"loxogon/parser"
 	"loxogon/token"
 )
+
+type Interpreter struct {
+	env environment.Env
+}
 
 type LoxObject struct {
 	Value any
 }
 
-func Evaluate(expr parser.Expr) (LoxObject, error) {
+func New() Interpreter {
+	return Interpreter{environment.New()}
+}
+
+func (i *Interpreter) Evaluate(expr parser.Expr) (LoxObject, error) {
 	// TODO handle (0/0) - (0/0). correct semantics should not be IEEE-754 compliant
 	switch expr.Kind {
 	case parser.LITERAL:
 		return LoxObject{expr.Data}, nil
+	case parser.VARIABLE:
+		value, err := i.env.Get(expr.Tok)
+		if err != nil {
+			return LoxObject{}, err
+		}
+		return LoxObject{Value: value}, nil
 	case parser.GROUPING:
-		value, err := Evaluate(expr.Children[0])
+		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {
 			return LoxObject{}, err
 		}
 
 		return value, nil
 	case parser.UNARY:
-		value, err := Evaluate(expr.Children[0])
+		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {
 			return LoxObject{}, err
 		}
@@ -40,11 +55,11 @@ func Evaluate(expr parser.Expr) (LoxObject, error) {
 			return LoxObject{!isTruthy(value)}, nil
 		}
 	case parser.BINARY:
-		left, err := Evaluate(expr.Children[0])
+		left, err := i.Evaluate(expr.Children[0])
 		if err != nil {
 			return LoxObject{}, err
 		}
-		right, err := Evaluate(expr.Children[1])
+		right, err := i.Evaluate(expr.Children[1])
 		if err != nil {
 			return LoxObject{}, err
 		}
@@ -114,17 +129,29 @@ func Evaluate(expr parser.Expr) (LoxObject, error) {
 	panic("Hit unreachable state in expression evaluation")
 }
 
-func EvaluateStmt(stmt parser.Stmt) (LoxObject, error) {
+func (i *Interpreter) EvaluateStmt(stmt parser.Stmt) (LoxObject, error) {
 	switch stmt.Kind {
 	case parser.EXPR:
-		_, err := Evaluate(stmt.Child)
-		return LoxObject{}, err
-	case parser.PRINT:
-		result, err := Evaluate(stmt.Child)
+		result, err := i.Evaluate(stmt.Child)
 		if err != nil {
 			return LoxObject{}, err
 		}
-		fmt.Println(result)
+		return result, nil
+	case parser.PRINT:
+		_, err := i.Evaluate(stmt.Child)
+		if err != nil {
+			return LoxObject{}, err
+		}
+		return LoxObject{}, nil
+	case parser.VAR_UNINIT:
+		i.env.Define(stmt.Name.Lexeme, nil)
+		return LoxObject{}, nil
+	case parser.VAR:
+		value, err := i.Evaluate(stmt.Child)
+		if err != nil {
+			return LoxObject{}, err
+		}
+		i.env.Define(stmt.Name.Lexeme, value)
 		return LoxObject{}, nil
 	}
 
@@ -165,7 +192,6 @@ func operandToNumber(operator token.Token, operand LoxObject) (float64, error) {
 }
 
 func operandsToNumbers(operator token.Token, left, right LoxObject) (float64, float64, error) {
-
 	l, leftOk := left.Value.(float64)
 	r, rightOk := right.Value.(float64)
 	if leftOk && rightOk {

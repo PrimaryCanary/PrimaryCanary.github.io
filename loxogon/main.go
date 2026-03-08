@@ -11,11 +11,12 @@ import (
 )
 
 func main() {
+	interp := interpreter.New()
 	if len(os.Args) > 2 {
 		fmt.Println("Usage: loxogon [script]")
 		os.Exit(64)
 	} else if len(os.Args) == 2 {
-		_, exit, err := runFile(os.Args[1])
+		_, exit, err := runFile(os.Args[1], interp)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "running script failed: %s\n", err)
 			os.Exit(exit)
@@ -23,7 +24,7 @@ func main() {
 			os.Exit(0)
 		}
 	} else {
-		exit, err := runRepl()
+		exit, err := runRepl(interp)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "running repl failed: %s\n", err)
 			os.Exit(exit)
@@ -33,15 +34,15 @@ func main() {
 	}
 }
 
-func runFile(file string) (interpreter.LoxObject, int, error) {
+func runFile(file string, interp interpreter.Interpreter) (interpreter.LoxObject, int, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
 		return interpreter.LoxObject{}, 1, fmt.Errorf("could not read file: %w", err)
 	}
-	return run(string(bytes))
+	return run(string(bytes), interp)
 }
 
-func run(code string) (interpreter.LoxObject, int, error) {
+func run(code string, interp interpreter.Interpreter) (interpreter.LoxObject, int, error) {
 	l := lexer.New(code)
 	toks, err := l.ScanTokens()
 	if err != nil {
@@ -55,7 +56,7 @@ func run(code string) (interpreter.LoxObject, int, error) {
 
 	var result interpreter.LoxObject
 	for _, stmt := range ast {
-		result, err = interpreter.EvaluateStmt(stmt)
+		result, err = interp.EvaluateStmt(stmt)
 		if err != nil {
 			return interpreter.LoxObject{}, 3, err
 		}
@@ -64,7 +65,7 @@ func run(code string) (interpreter.LoxObject, int, error) {
 	return result, 0, nil
 }
 
-func runRepl() (int, error) {
+func runRepl(interp interpreter.Interpreter) (int, error) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("> ")
@@ -76,7 +77,7 @@ func runRepl() (int, error) {
 		if len(trimmed) == 0 {
 			return 0, nil
 		}
-		result, _, err := run(string(trimmed))
+		result, _, err := run(string(trimmed), interp)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 		} else {

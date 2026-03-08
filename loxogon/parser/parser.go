@@ -13,10 +13,13 @@ const (
 	UNARY
 	LITERAL
 	GROUPING
+	VARIABLE
 )
 const (
 	EXPR StmtKind = iota
 	PRINT
+	VAR
+	VAR_UNINIT
 )
 
 // Fat struct representation of expressions
@@ -30,6 +33,7 @@ type Expr struct {
 // Fat struct representation of expressions
 type Stmt struct {
 	Kind  StmtKind
+	Name  token.Token
 	Child Expr
 }
 
@@ -47,6 +51,9 @@ type ParseError struct {
 //
 // Lox ENBF grammar:
 //
+// program        → declaration* EOF ;
+// declaration    → varDecl | statement ;
+// varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // program        → statement* EOF ;
 // statement      → exprStmt | printStmt ;
 // exprStmt       → expression ";" ;
@@ -57,18 +64,62 @@ type ParseError struct {
 // term           → factor ( ( "-" | "+" ) factor )* ;
 // factor         → unary ( ( "/" | "*" ) unary )* ;
 // unary          → ( "!" | "-" ) unary | primary ;
-// primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+// primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
 func Parse(toks []token.Token) ([]Stmt, error) {
 	p := parser{toks: toks, current: 0}
 	statements := make([]Stmt, 0)
 	for !p.atEnd() {
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
 			return nil, err
 		}
 		statements = append(statements, stmt)
 	}
 	return statements, nil
+}
+
+// declaration → varDecl | statement ;
+func (p *parser) declaration() (Stmt, error) {
+	if p.match(token.VAR) {
+		stmt, err := p.varDecl()
+		if err != nil {
+			p.synchronize()
+			return Stmt{}, err
+		}
+		return stmt, nil
+	}
+
+	stmt, err := p.statement()
+	if err != nil {
+		p.synchronize()
+		return Stmt{}, err
+	}
+	return stmt, nil
+}
+
+// varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
+func (p *parser) varDecl() (Stmt, error) {
+	ident, err := p.consume(token.IDENTIFIER, "expected identifier after var")
+	if err != nil {
+		return Stmt{}, err
+	}
+
+	var decl Stmt
+	if p.match(token.EQUAL) {
+		initializer, err := p.expression()
+		if err != nil {
+			return Stmt{}, err
+		}
+		decl = newVarDecl(ident, initializer)
+	} else {
+		decl = newVarDeclUninit(ident)
+	}
+
+	_, err = p.consume(token.SEMICOLON, "expected semicolon after variable declaration")
+	if err != nil {
+		return Stmt{}, err
+	}
+	return decl, nil
 }
 
 // statement → exprStmt | printStmt ;
@@ -159,7 +210,7 @@ func (p *parser) unary() (Expr, error) {
 	return p.primary()
 }
 
-// primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+// primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
 func (p *parser) primary() (Expr, error) {
 	if p.match(token.NUMBER, token.STRING) {
 		data := p.previous().Literal
@@ -173,6 +224,9 @@ func (p *parser) primary() (Expr, error) {
 	}
 	if p.match(token.NIL) {
 		return newLiteral(nil), nil
+	}
+	if p.match(token.IDENTIFIER) {
+		return newVariable(p.previous()), nil
 	}
 	if p.match(token.LEFT_PAREN) {
 		expr, err := p.expression()
@@ -203,6 +257,24 @@ func (p *parser) match(kinds ...token.TokenKind) bool {
 		}
 	}
 	return false
+}
+
+// Discard tokens until parser is (probably) at a statement boundary
+func (p *parser) synchronize() {
+	// Skip unexpected token
+	p.advance()
+
+	for !p.atEnd() {
+		if p.previous().Kind == token.SEMICOLON {
+			return
+		}
+		switch p.peek().Kind {
+		case token.CLASS, token.FUN, token.VAR, token.FOR,
+			token.IF, token.WHILE, token.PRINT, token.RETURN:
+			return
+		}
+		p.advance()
+	}
 }
 
 // Check if the current token is the same as the argument and advance if necessary.
@@ -249,6 +321,10 @@ func newGrouping(e Expr) Expr {
 	return Expr{Kind: GROUPING, Children: []Expr{e}}
 }
 
+func newVariable(t token.Token) Expr {
+	return Expr{Kind: VARIABLE, Tok: t}
+}
+
 func newExprStmt(e Expr) Stmt {
 	return Stmt{Kind: EXPR, Child: e}
 }
@@ -256,6 +332,15 @@ func newExprStmt(e Expr) Stmt {
 func newPrintStmt(e Expr) Stmt {
 	return Stmt{Kind: PRINT, Child: e}
 }
+
+func newVarDecl(name token.Token, e Expr) Stmt {
+	return Stmt{Kind: VAR, Name: name, Child: e}
+}
+
+func newVarDeclUninit(name token.Token) Stmt {
+	return Stmt{Kind: VAR_UNINIT, Name: name}
+}
+
 func (e Expr) String() string {
 	switch e.Kind {
 	case BINARY:
