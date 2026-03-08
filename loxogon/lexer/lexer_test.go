@@ -2,7 +2,7 @@ package lexer
 
 import (
 	"fmt"
-	"loxogon/token"
+	"loxogon/ast"
 	"testing"
 )
 
@@ -10,136 +10,136 @@ func TestLexer(t *testing.T) {
 	lexerTests := []struct {
 		input          string
 		expectedTokens []struct {
-			expectedKind    token.TokenKind
+			expectedKind    ast.TokenKind
 			expectedLiteral string
 		}
 	}{
 		{
 			input: `(( )){}`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.LEFT_PAREN, ""},
-				{token.LEFT_PAREN, ""},
-				{token.RIGHT_PAREN, ""},
-				{token.RIGHT_PAREN, ""},
-				{token.LEFT_BRACE, ""},
-				{token.RIGHT_BRACE, ""},
+				{ast.LEFT_PAREN, ""},
+				{ast.LEFT_PAREN, ""},
+				{ast.RIGHT_PAREN, ""},
+				{ast.RIGHT_PAREN, ""},
+				{ast.LEFT_BRACE, ""},
+				{ast.RIGHT_BRACE, ""},
 			},
 		},
 		{
 			input: `!*+-/=<> <= ==`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.BANG, ""},
-				{token.STAR, ""},
-				{token.PLUS, ""},
-				{token.MINUS, ""},
-				{token.SLASH, ""},
-				{token.EQUAL, ""},
-				{token.LESS, ""},
-				{token.GREATER, ""},
-				{token.LESS_EQUAL, ""},
-				{token.EQUAL_EQUAL, ""},
+				{ast.BANG, ""},
+				{ast.STAR, ""},
+				{ast.PLUS, ""},
+				{ast.MINUS, ""},
+				{ast.SLASH, ""},
+				{ast.EQUAL, ""},
+				{ast.LESS, ""},
+				{ast.GREATER, ""},
+				{ast.LESS_EQUAL, ""},
+				{ast.EQUAL_EQUAL, ""},
 			},
 		},
 		{
 			input: `"string literal"`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.STRING, "string literal"},
+				{ast.STRING, "string literal"},
 			},
 		},
 		{
 			input: `"multiline
   string literal"`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.STRING, "multiline\n  string literal"},
+				{ast.STRING, "multiline\n  string literal"},
 			},
 		},
 		{
 			input: `01234 45.67`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.NUMBER, "1234"},
-				{token.NUMBER, "45.67"},
+				{ast.NUMBER, "1234"},
+				{ast.NUMBER, "45.67"},
 			},
 		},
 		{
 			input: `0123.`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.NUMBER, "123"},
-				{token.DOT, ""},
+				{ast.NUMBER, "123"},
+				{ast.DOT, ""},
 			},
 		},
 		{
 			input: `.9897`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.DOT, ""},
-				{token.NUMBER, "9897"},
+				{ast.DOT, ""},
+				{ast.NUMBER, "9897"},
 			},
 		},
 		{
 			input: `id _ident _978indent _asd_ident`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.IDENTIFIER, "id"},
-				{token.IDENTIFIER, "_ident"},
-				{token.IDENTIFIER, "_978indent"},
-				{token.IDENTIFIER, "_asd_ident"},
+				{ast.IDENTIFIER, "id"},
+				{ast.IDENTIFIER, "_ident"},
+				{ast.IDENTIFIER, "_978indent"},
+				{ast.IDENTIFIER, "_asd_ident"},
 			},
 		},
 		{
 			input: `and class else false fun for if nil or print return super this true var while`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.AND, ""},
-				{token.CLASS, ""},
-				{token.ELSE, ""},
-				{token.FALSE, ""},
-				{token.FUN, ""},
-				{token.FOR, ""},
-				{token.IF, ""},
-				{token.NIL, ""},
-				{token.OR, ""},
-				{token.PRINT, ""},
-				{token.RETURN, ""},
-				{token.SUPER, ""},
-				{token.THIS, ""},
-				{token.TRUE, ""},
-				{token.VAR, ""},
-				{token.WHILE, ""},
+				{ast.AND, ""},
+				{ast.CLASS, ""},
+				{ast.ELSE, ""},
+				{ast.FALSE, ""},
+				{ast.FUN, ""},
+				{ast.FOR, ""},
+				{ast.IF, ""},
+				{ast.NIL, ""},
+				{ast.OR, ""},
+				{ast.PRINT_TOK, ""},
+				{ast.RETURN, ""},
+				{ast.SUPER, ""},
+				{ast.THIS, ""},
+				{ast.TRUE, ""},
+				{ast.VAR_TOK, ""},
+				{ast.WHILE, ""},
 			},
 		},
 		{
 			input: `nile an _class`,
 			expectedTokens: []struct {
-				expectedKind    token.TokenKind
+				expectedKind    ast.TokenKind
 				expectedLiteral string
 			}{
-				{token.IDENTIFIER, "nile"},
-				{token.IDENTIFIER, "an"},
-				{token.IDENTIFIER, "_class"},
+				{ast.IDENTIFIER, "nile"},
+				{ast.IDENTIFIER, "an"},
+				{ast.IDENTIFIER, "_class"},
 			},
 		},
 	}
@@ -152,7 +152,7 @@ func TestLexer(t *testing.T) {
 				t.Fatalf("ScanTokens failed: %v", err)
 			}
 
-			if tokens[len(tokens)-1].Kind != token.EOF {
+			if tokens[len(tokens)-1].Kind != ast.EOF {
 				t.Fatalf("missing EOF at end of input. input=%v", lt.input)
 			}
 			tokens = tokens[:len(tokens)-1]

@@ -2,7 +2,7 @@ package environment
 
 import (
 	"fmt"
-	"loxogon/token"
+	"loxogon/ast"
 )
 
 type Env struct {
@@ -10,7 +10,7 @@ type Env struct {
 }
 
 type UndefVarError struct {
-	token token.Token
+	token ast.Token
 }
 
 func New() Env {
@@ -21,7 +21,7 @@ func (e *Env) Define(name string, value any) {
 	e.Bindings[name] = value
 }
 
-func (e *Env) Get(name token.Token) (any, error) {
+func (e *Env) Get(name ast.Token) (any, error) {
 	if value, ok := e.Bindings[name.Lexeme]; ok {
 		return value, nil
 	}

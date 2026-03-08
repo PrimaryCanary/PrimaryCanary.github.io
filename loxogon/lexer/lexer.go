@@ -2,42 +2,23 @@ package lexer
 
 import (
 	"fmt"
-	"loxogon/token"
+	"loxogon/ast"
 	"strconv"
 )
 
 type Lexer struct {
 	source               string
-	toks                 []token.Token
+	toks                 []ast.Token
 	start, current, line int
-}
-
-var keywords = map[string]token.TokenKind{
-	"and":    token.AND,
-	"class":  token.CLASS,
-	"else":   token.ELSE,
-	"false":  token.FALSE,
-	"for":    token.FOR,
-	"fun":    token.FUN,
-	"if":     token.IF,
-	"nil":    token.NIL,
-	"or":     token.OR,
-	"print":  token.PRINT,
-	"return": token.RETURN,
-	"super":  token.SUPER,
-	"this":   token.THIS,
-	"true":   token.TRUE,
-	"var":    token.VAR,
-	"while":  token.WHILE,
 }
 
 func New(source string) Lexer {
 	return Lexer{source: source,
-		toks:  make([]token.Token, 0, 10),
+		toks:  make([]ast.Token, 0, 10),
 		start: 0, current: 0, line: 1}
 }
 
-func (l *Lexer) ScanTokens() ([]token.Token, error) {
+func (l *Lexer) ScanTokens() ([]ast.Token, error) {
 	for !l.atEnd() {
 		l.start = l.current
 		if err := l.scan(); err != nil {
@@ -46,7 +27,7 @@ func (l *Lexer) ScanTokens() ([]token.Token, error) {
 	}
 
 	l.toks = append(l.toks,
-		token.Token{Kind: token.EOF,
+		ast.Token{Kind: ast.EOF,
 			Lexeme: "", Literal: "", Line: l.line})
 	return l.toks, nil
 }
@@ -65,48 +46,48 @@ func (l *Lexer) scan() error {
 	c := l.advance()
 	switch c {
 	case '(':
-		l.addToken(token.LEFT_PAREN)
+		l.addToken(ast.LEFT_PAREN)
 	case ')':
-		l.addToken(token.RIGHT_PAREN)
+		l.addToken(ast.RIGHT_PAREN)
 	case '{':
-		l.addToken(token.LEFT_BRACE)
+		l.addToken(ast.LEFT_BRACE)
 	case '}':
-		l.addToken(token.RIGHT_BRACE)
+		l.addToken(ast.RIGHT_BRACE)
 	case ',':
-		l.addToken(token.COMMA)
+		l.addToken(ast.COMMA)
 	case '.':
-		l.addToken(token.DOT)
+		l.addToken(ast.DOT)
 	case '-':
-		l.addToken(token.MINUS)
+		l.addToken(ast.MINUS)
 	case '+':
-		l.addToken(token.PLUS)
+		l.addToken(ast.PLUS)
 	case ';':
-		l.addToken(token.SEMICOLON)
+		l.addToken(ast.SEMICOLON)
 	case '*':
-		l.addToken(token.STAR)
+		l.addToken(ast.STAR)
 	case '!':
 		if l.match('=') {
-			l.addToken(token.BANG_EQUAL)
+			l.addToken(ast.BANG_EQUAL)
 		} else {
-			l.addToken(token.BANG)
+			l.addToken(ast.BANG)
 		}
 	case '=':
 		if l.match('=') {
-			l.addToken(token.EQUAL_EQUAL)
+			l.addToken(ast.EQUAL_EQUAL)
 		} else {
-			l.addToken(token.EQUAL)
+			l.addToken(ast.EQUAL)
 		}
 	case '<':
 		if l.match('=') {
-			l.addToken(token.LESS_EQUAL)
+			l.addToken(ast.LESS_EQUAL)
 		} else {
-			l.addToken(token.LESS)
+			l.addToken(ast.LESS)
 		}
 	case '>':
 		if !l.match('=') {
-			l.addToken(token.GREATER)
+			l.addToken(ast.GREATER)
 		} else {
-			l.addToken(token.GREATER_EQUAL)
+			l.addToken(ast.GREATER_EQUAL)
 		}
 	case '/':
 		if l.match('/') {
@@ -114,7 +95,7 @@ func (l *Lexer) scan() error {
 				l.advance()
 			}
 		} else {
-			l.addToken(token.SLASH)
+			l.addToken(ast.SLASH)
 		}
 
 	// Ignore whitespace.
@@ -141,13 +122,13 @@ func (l *Lexer) scan() error {
 	return nil
 }
 
-func (l *Lexer) addToken(k token.TokenKind) {
+func (l *Lexer) addToken(k ast.TokenKind) {
 	l.addLiteral(k, nil)
 }
 
-func (l *Lexer) addLiteral(k token.TokenKind, literal any) {
+func (l *Lexer) addLiteral(k ast.TokenKind, literal any) {
 	text := l.source[l.start:l.current]
-	l.toks = append(l.toks, token.Token{Kind: k, Literal: literal, Lexeme: text, Line: l.line})
+	l.toks = append(l.toks, ast.Token{Kind: k, Literal: literal, Lexeme: text, Line: l.line})
 }
 
 func (l *Lexer) match(expected byte) bool {
@@ -185,7 +166,7 @@ func (l *Lexer) string() error {
 		return l.error(l.line, "unterminated string")
 	}
 	l.advance()
-	l.addLiteral(token.STRING, string(l.source[l.start+1:l.current-1]))
+	l.addLiteral(ast.STRING, string(l.source[l.start+1:l.current-1]))
 	return nil
 }
 
@@ -204,7 +185,7 @@ func (l *Lexer) number() error {
 		// TODO: Unreachable?
 		return l.error(l.line, "could not parse number")
 	}
-	l.addLiteral(token.NUMBER, float)
+	l.addLiteral(ast.NUMBER, float)
 	return nil
 }
 
@@ -214,9 +195,9 @@ func (l *Lexer) identifier() {
 	}
 
 	text := string(l.source[l.start:l.current])
-	kind, ok := keywords[text]
+	kind, ok := ast.Keywords[text]
 	if !ok {
-		kind = token.IDENTIFIER
+		kind = ast.IDENTIFIER
 	}
 	l.addToken(kind)
 }

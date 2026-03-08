@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"loxogon/ast"
 	"loxogon/interpreter"
 	"loxogon/lexer"
 	"loxogon/parser"
@@ -34,31 +35,31 @@ func main() {
 	}
 }
 
-func runFile(file string, interp interpreter.Interpreter) (interpreter.LoxObject, int, error) {
+func runFile(file string, interp interpreter.Interpreter) (ast.LoxObject, int, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
-		return interpreter.LoxObject{}, 1, fmt.Errorf("could not read file: %w", err)
+		return ast.LoxObject{}, 1, fmt.Errorf("could not read file: %w", err)
 	}
 	return run(string(bytes), interp)
 }
 
-func run(code string, interp interpreter.Interpreter) (interpreter.LoxObject, int, error) {
+func run(code string, interp interpreter.Interpreter) (ast.LoxObject, int, error) {
 	l := lexer.New(code)
 	toks, err := l.ScanTokens()
 	if err != nil {
-		return interpreter.LoxObject{}, 1, err
+		return ast.LoxObject{}, 1, err
 	}
 
-	ast, err := parser.Parse(toks)
+	parsed, err := parser.Parse(toks)
 	if err != nil {
-		return interpreter.LoxObject{}, 2, err
+		return ast.LoxObject{}, 2, err
 	}
 
-	var result interpreter.LoxObject
-	for _, stmt := range ast {
+	var result ast.LoxObject
+	for _, stmt := range parsed {
 		result, err = interp.EvaluateStmt(stmt)
 		if err != nil {
-			return interpreter.LoxObject{}, 3, err
+			return ast.LoxObject{}, 3, err
 		}
 	}
 

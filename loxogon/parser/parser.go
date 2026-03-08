@@ -2,48 +2,16 @@ package parser
 
 import (
 	"fmt"
-	"loxogon/token"
+	"loxogon/ast"
 )
-
-type ExprKind int
-type StmtKind int
-
-const (
-	BINARY ExprKind = iota
-	UNARY
-	LITERAL
-	GROUPING
-	VARIABLE
-)
-const (
-	EXPR StmtKind = iota
-	PRINT
-	VAR
-	VAR_UNINIT
-)
-
-// Fat struct representation of expressions
-type Expr struct {
-	Kind     ExprKind
-	Tok      token.Token
-	Data     any
-	Children []Expr
-}
-
-// Fat struct representation of expressions
-type Stmt struct {
-	Kind  StmtKind
-	Name  token.Token
-	Child Expr
-}
 
 type parser struct {
-	toks    []token.Token
+	toks    []ast.Token
 	current int
 }
 
 type ParseError struct {
-	tok     token.Token
+	tok     ast.Token
 	message string
 }
 
@@ -65,9 +33,9 @@ type ParseError struct {
 // factor         → unary ( ( "/" | "*" ) unary )* ;
 // unary          → ( "!" | "-" ) unary | primary ;
 // primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
-func Parse(toks []token.Token) ([]Stmt, error) {
+func Parse(toks []ast.Token) ([]ast.Stmt, error) {
 	p := parser{toks: toks, current: 0}
-	statements := make([]Stmt, 0)
+	statements := make([]ast.Stmt, 0)
 	for !p.atEnd() {
 		stmt, err := p.declaration()
 		if err != nil {
@@ -79,12 +47,12 @@ func Parse(toks []token.Token) ([]Stmt, error) {
 }
 
 // declaration → varDecl | statement ;
-func (p *parser) declaration() (Stmt, error) {
-	if p.match(token.VAR) {
+func (p *parser) declaration() (ast.Stmt, error) {
+	if p.match(ast.VAR_TOK) {
 		stmt, err := p.varDecl()
 		if err != nil {
 			p.synchronize()
-			return Stmt{}, err
+			return ast.Stmt{}, err
 		}
 		return stmt, nil
 	}
@@ -92,164 +60,164 @@ func (p *parser) declaration() (Stmt, error) {
 	stmt, err := p.statement()
 	if err != nil {
 		p.synchronize()
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
 	return stmt, nil
 }
 
 // varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
-func (p *parser) varDecl() (Stmt, error) {
-	ident, err := p.consume(token.IDENTIFIER, "expected identifier after var")
+func (p *parser) varDecl() (ast.Stmt, error) {
+	ident, err := p.consume(ast.IDENTIFIER, "expected identifier after var")
 	if err != nil {
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
 
-	var decl Stmt
-	if p.match(token.EQUAL) {
+	var decl ast.Stmt
+	if p.match(ast.EQUAL) {
 		initializer, err := p.expression()
 		if err != nil {
-			return Stmt{}, err
+			return ast.Stmt{}, err
 		}
-		decl = newVarDecl(ident, initializer)
+		decl = ast.NewVarDecl(ident, initializer)
 	} else {
-		decl = newVarDeclUninit(ident)
+		decl = ast.NewVarDeclUninit(ident)
 	}
 
-	_, err = p.consume(token.SEMICOLON, "expected semicolon after variable declaration")
+	_, err = p.consume(ast.SEMICOLON, "expected semicolon after variable declaration")
 	if err != nil {
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
 	return decl, nil
 }
 
 // statement → exprStmt | printStmt ;
-func (p *parser) statement() (Stmt, error) {
-	if p.match(token.PRINT) {
+func (p *parser) statement() (ast.Stmt, error) {
+	if p.match(ast.PRINT_TOK) {
 		return p.printStatement()
 	}
 	return p.expressionStatement()
 }
 
 // exprStmt → expression ";" ;
-func (p *parser) expressionStatement() (Stmt, error) {
+func (p *parser) expressionStatement() (ast.Stmt, error) {
 	expr, err := p.expression()
 	if err != nil {
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
-	_, err = p.consume(token.SEMICOLON, "expected ';' after expression")
+	_, err = p.consume(ast.SEMICOLON, "expected ';' after expression")
 	if err != nil {
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
-	return newExprStmt(expr), nil
+	return ast.NewExprStmt(expr), nil
 }
 
 // printStmt → "print" expression ";" ;
-func (p *parser) printStatement() (Stmt, error) {
+func (p *parser) printStatement() (ast.Stmt, error) {
 	expr, err := p.expression()
 	if err != nil {
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
-	_, err = p.consume(token.SEMICOLON, "expected ';' after expression")
+	_, err = p.consume(ast.SEMICOLON, "expected ';' after expression")
 	if err != nil {
-		return Stmt{}, err
+		return ast.Stmt{}, err
 	}
-	return newPrintStmt(expr), nil
+	return ast.NewPrintStmt(expr), nil
 }
 
 // expression → equality
-func (p *parser) expression() (Expr, error) {
+func (p *parser) expression() (ast.Expr, error) {
 	return p.equality()
 }
 
-func (p *parser) leftAssocBinaryExpr(operand func() (Expr, error), kinds ...token.TokenKind) (Expr, error) {
+func (p *parser) leftAssocBinaryExpr(operand func() (ast.Expr, error), kinds ...ast.TokenKind) (ast.Expr, error) {
 	left, err := operand()
 	if err != nil {
-		return Expr{}, err
+		return ast.Expr{}, err
 	}
 	for p.match(kinds...) {
 		operator := p.previous()
 		right, err := operand()
 		if err != nil {
-			return Expr{}, err
+			return ast.Expr{}, err
 		}
-		left = newBinary(operator, left, right)
+		left = ast.NewBinary(operator, left, right)
 	}
 	return left, nil
 }
 
 // equality → comparison ( ( "!=" | "==" ) comparison )*
-func (p *parser) equality() (Expr, error) {
-	return p.leftAssocBinaryExpr(p.comparison, token.BANG_EQUAL, token.EQUAL_EQUAL)
+func (p *parser) equality() (ast.Expr, error) {
+	return p.leftAssocBinaryExpr(p.comparison, ast.BANG_EQUAL, ast.EQUAL_EQUAL)
 }
 
 // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )*
-func (p *parser) comparison() (Expr, error) {
-	return p.leftAssocBinaryExpr(p.term, token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL)
+func (p *parser) comparison() (ast.Expr, error) {
+	return p.leftAssocBinaryExpr(p.term, ast.GREATER, ast.GREATER_EQUAL, ast.LESS, ast.LESS_EQUAL)
 }
 
 // term → factor ( ( "-" | "+" ) factor )*
-func (p *parser) term() (Expr, error) {
-	return p.leftAssocBinaryExpr(p.factor, token.MINUS, token.PLUS)
+func (p *parser) term() (ast.Expr, error) {
+	return p.leftAssocBinaryExpr(p.factor, ast.MINUS, ast.PLUS)
 }
 
 // factor → unary ( ( "/" | "*" ) unary )*
-func (p *parser) factor() (Expr, error) {
-	return p.leftAssocBinaryExpr(p.unary, token.STAR, token.SLASH)
+func (p *parser) factor() (ast.Expr, error) {
+	return p.leftAssocBinaryExpr(p.unary, ast.STAR, ast.SLASH)
 }
 
 // unary → ( "!" | "-" ) unary | primary
-func (p *parser) unary() (Expr, error) {
-	if p.match(token.BANG, token.MINUS) {
+func (p *parser) unary() (ast.Expr, error) {
+	if p.match(ast.BANG, ast.MINUS) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {
-			return Expr{}, err
+			return ast.Expr{}, err
 		}
-		return newUnary(operator, right), nil
+		return ast.NewUnary(operator, right), nil
 	}
 	return p.primary()
 }
 
 // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
-func (p *parser) primary() (Expr, error) {
-	if p.match(token.NUMBER, token.STRING) {
+func (p *parser) primary() (ast.Expr, error) {
+	if p.match(ast.NUMBER, ast.STRING) {
 		data := p.previous().Literal
-		return newLiteral(data), nil
+		return ast.NewLiteral(data), nil
 	}
-	if p.match(token.TRUE) {
-		return newLiteral(true), nil
+	if p.match(ast.TRUE) {
+		return ast.NewLiteral(true), nil
 	}
-	if p.match(token.FALSE) {
-		return newLiteral(false), nil
+	if p.match(ast.FALSE) {
+		return ast.NewLiteral(false), nil
 	}
-	if p.match(token.NIL) {
-		return newLiteral(nil), nil
+	if p.match(ast.NIL) {
+		return ast.NewLiteral(nil), nil
 	}
-	if p.match(token.IDENTIFIER) {
-		return newVariable(p.previous()), nil
+	if p.match(ast.IDENTIFIER) {
+		return ast.NewVariable(p.previous()), nil
 	}
-	if p.match(token.LEFT_PAREN) {
+	if p.match(ast.LEFT_PAREN) {
 		expr, err := p.expression()
 		if err != nil {
-			return Expr{}, err
+			return ast.Expr{}, err
 		}
-		_, err = p.consume(token.RIGHT_PAREN, "expected ')' after expression")
+		_, err = p.consume(ast.RIGHT_PAREN, "expected ')' after expression")
 		if err != nil {
-			return Expr{}, err
+			return ast.Expr{}, err
 		}
-		return newGrouping(expr), nil
+		return ast.NewGrouping(expr), nil
 	}
 
-	return Expr{}, ParseError{p.peek(), "expected expression"}
+	return ast.Expr{}, ParseError{p.peek(), "expected expression"}
 }
 
 // Check if the current token is the same as the argument.
-func (p *parser) check(kind token.TokenKind) bool {
+func (p *parser) check(kind ast.TokenKind) bool {
 	return !p.atEnd() && (kind == p.peek().Kind)
 }
 
 // Check if the current token is the same as one of the arguments and advance if necessary.
-func (p *parser) match(kinds ...token.TokenKind) bool {
+func (p *parser) match(kinds ...ast.TokenKind) bool {
 	for _, k := range kinds {
 		if p.check(k) {
 			p.advance()
@@ -265,12 +233,12 @@ func (p *parser) synchronize() {
 	p.advance()
 
 	for !p.atEnd() {
-		if p.previous().Kind == token.SEMICOLON {
+		if p.previous().Kind == ast.SEMICOLON {
 			return
 		}
 		switch p.peek().Kind {
-		case token.CLASS, token.FUN, token.VAR, token.FOR,
-			token.IF, token.WHILE, token.PRINT, token.RETURN:
+		case ast.CLASS, ast.FUN, ast.VAR_TOK, ast.FOR,
+			ast.IF, ast.WHILE, ast.PRINT_TOK, ast.RETURN:
 			return
 		}
 		p.advance()
@@ -279,22 +247,22 @@ func (p *parser) synchronize() {
 
 // Check if the current token is the same as the argument and advance if necessary.
 // A failed match is an error.
-func (p *parser) consume(kind token.TokenKind, message string) (token.Token, error) {
+func (p *parser) consume(kind ast.TokenKind, message string) (ast.Token, error) {
 	if p.check(kind) {
 		return p.advance(), nil
 	}
-	return token.Token{}, ParseError{p.peek(), message}
+	return ast.Token{}, ParseError{p.peek(), message}
 }
 
-func (p *parser) peek() token.Token {
+func (p *parser) peek() ast.Token {
 	return p.toks[p.current]
 }
 
-func (p *parser) previous() token.Token {
+func (p *parser) previous() ast.Token {
 	return p.toks[p.current-1]
 }
 
-func (p *parser) advance() token.Token {
+func (p *parser) advance() ast.Token {
 	if !p.atEnd() {
 		p.current += 1
 	}
@@ -302,61 +270,11 @@ func (p *parser) advance() token.Token {
 }
 
 func (p *parser) atEnd() bool {
-	return p.peek().Kind == token.EOF
-}
-
-func newLiteral(data any) Expr {
-	return Expr{Kind: LITERAL, Data: data}
-}
-
-func newBinary(operator token.Token, left, right Expr) Expr {
-	return Expr{Kind: BINARY, Tok: operator, Children: []Expr{left, right}}
-}
-
-func newUnary(operator token.Token, e Expr) Expr {
-	return Expr{Kind: UNARY, Tok: operator, Children: []Expr{e}}
-}
-
-func newGrouping(e Expr) Expr {
-	return Expr{Kind: GROUPING, Children: []Expr{e}}
-}
-
-func newVariable(t token.Token) Expr {
-	return Expr{Kind: VARIABLE, Tok: t}
-}
-
-func newExprStmt(e Expr) Stmt {
-	return Stmt{Kind: EXPR, Child: e}
-}
-
-func newPrintStmt(e Expr) Stmt {
-	return Stmt{Kind: PRINT, Child: e}
-}
-
-func newVarDecl(name token.Token, e Expr) Stmt {
-	return Stmt{Kind: VAR, Name: name, Child: e}
-}
-
-func newVarDeclUninit(name token.Token) Stmt {
-	return Stmt{Kind: VAR_UNINIT, Name: name}
-}
-
-func (e Expr) String() string {
-	switch e.Kind {
-	case BINARY:
-		return fmt.Sprintf("(%s %s %v)", e.Tok.Lexeme, e.Children[0], e.Children[1])
-	case UNARY:
-		return fmt.Sprintf("(%s %v)", e.Tok.Lexeme, e.Children[0])
-	case LITERAL:
-		return fmt.Sprint(e.Data)
-	case GROUPING:
-		return fmt.Sprintf("(group %v)", e.Children[0])
-	}
-	return ""
+	return p.peek().Kind == ast.EOF
 }
 
 func (pe ParseError) Error() string {
-	if pe.tok.Kind == token.EOF {
+	if pe.tok.Kind == ast.EOF {
 		return fmt.Sprintf("[line %v] Parse error at end of input: %v",
 			pe.tok.Line, pe.message)
 	}

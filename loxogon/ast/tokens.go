@@ -1,4 +1,4 @@
-package token
+package ast
 
 import "fmt"
 
@@ -6,7 +6,7 @@ type TokenKind int
 
 const (
 	// Single-character tokens.
-	LEFT_PAREN = iota
+	LEFT_PAREN TokenKind = iota
 	RIGHT_PAREN
 	LEFT_BRACE
 	RIGHT_BRACE
@@ -43,12 +43,12 @@ const (
 	IF
 	NIL
 	OR
-	PRINT
+	PRINT_TOK
 	RETURN
 	SUPER
 	THIS
 	TRUE
-	VAR
+	VAR_TOK
 	WHILE
 
 	EOF
@@ -102,6 +102,25 @@ var token_names = [...]string{
 	"WHILE",
 
 	"EOF",
+}
+
+var Keywords = map[string]TokenKind{
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"for":    FOR,
+	"fun":    FUN,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"print":  PRINT_TOK,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR_TOK,
+	"while":  WHILE,
 }
 
 func (t TokenKind) String() string {
