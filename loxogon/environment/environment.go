@@ -6,7 +6,10 @@ import (
 )
 
 type Env struct {
-	Bindings map[string]ast.LoxObject
+	// Bindings in the local scope
+	bindings map[string]ast.LoxObject
+	// Environment of enclosing scope
+	parent *Env
 }
 
 type UndefVarError struct {
@@ -14,24 +17,34 @@ type UndefVarError struct {
 }
 
 func New() Env {
-	return Env{Bindings: make(map[string]ast.LoxObject)}
+	return Env{bindings: make(map[string]ast.LoxObject), parent: nil}
+}
+
+func NewWithParent(par Env) Env {
+	return Env{bindings: make(map[string]ast.LoxObject), parent: &par}
 }
 
 func (e *Env) Define(name string, value ast.LoxObject) {
-	e.Bindings[name] = value
+	e.bindings[name] = value
 }
 
 func (e *Env) Get(name ast.Token) (ast.LoxObject, error) {
-	if value, ok := e.Bindings[name.Lexeme]; ok {
+	if value, ok := e.bindings[name.Lexeme]; ok {
 		return value, nil
+	}
+	if e.parent != nil {
+		return e.parent.Get(name)
 	}
 	return ast.LoxObject{}, UndefVarError{token: name}
 }
 
 func (e *Env) Assign(name ast.Token, value ast.LoxObject) error {
-	if _, ok := e.Bindings[name.Lexeme]; ok {
-		e.Bindings[name.Lexeme] = value
+	if _, ok := e.bindings[name.Lexeme]; ok {
+		e.bindings[name.Lexeme] = value
 		return nil
+	}
+	if e.parent != nil {
+		return e.parent.Assign(name, value)
 	}
 	return UndefVarError{name}
 }
