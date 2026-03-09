@@ -56,6 +56,12 @@ func TestParser_Parse(t *testing.T) {
 			wantStr: "(var a=1);(var b=3);(print (> a b));",
 			wantErr: nil,
 		},
+		{
+			name:    "Variable assignment",
+			source:  "var a; a=1;",
+			wantStr: "(var a);(a = 1);",
+			wantErr: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -25,6 +25,13 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 			return ast.LoxObject{}, err
 		}
 		return value, nil
+	case ast.ASSIGN:
+		value, err := i.Evaluate(expr.Children[0])
+		if err != nil {
+			return ast.LoxObject{}, err
+		}
+		i.env.Assign(expr.Tok, value)
+		return value, nil
 	case ast.GROUPING:
 		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {

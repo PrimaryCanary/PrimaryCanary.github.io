@@ -26,7 +26,8 @@ type ParseError struct {
 // statement      → exprStmt | printStmt ;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
-// expression     → equality ;
+// expression     → assignment ;
+// assignment     → IDENTIFIER "=" assignment | equality ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
@@ -124,9 +125,33 @@ func (p *parser) printStatement() (ast.Stmt, error) {
 	return ast.NewPrintStmt(expr), nil
 }
 
-// expression → equality
+// expression → assignment ;
 func (p *parser) expression() (ast.Expr, error) {
-	return p.equality()
+	return p.assignment()
+}
+
+// assignment → IDENTIFIER "=" assignment | equality ;
+func (p *parser) assignment() (ast.Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return ast.Expr{}, err
+	}
+
+	if p.match(ast.EQUAL) {
+		equals := p.previous()
+		value, err := p.assignment()
+		if err != nil {
+			return ast.Expr{}, nil
+		}
+
+		if expr.Kind == ast.VARIABLE {
+			name := expr.Tok
+			return ast.NewAssign(name, value), nil
+		}
+		return ast.Expr{}, ParseError{equals, "invalid assignment target"}
+	}
+
+	return expr, nil
 }
 
 func (p *parser) leftAssocBinaryExpr(operand func() (ast.Expr, error), kinds ...ast.TokenKind) (ast.Expr, error) {

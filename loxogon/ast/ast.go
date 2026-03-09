@@ -11,6 +11,7 @@ const (
 	LITERAL
 	GROUPING
 	VARIABLE
+	ASSIGN
 )
 const (
 	EXPR StmtKind = iota
@@ -58,6 +59,10 @@ func NewVariable(t Token) Expr {
 	return Expr{Kind: VARIABLE, Tok: t}
 }
 
+func NewAssign(t Token, e Expr) Expr {
+	return Expr{Kind: ASSIGN, Tok: t, Children: []Expr{e}}
+}
+
 func NewExprStmt(e Expr) Stmt {
 	return Stmt{Kind: EXPR, Child: e}
 }
@@ -86,6 +91,8 @@ func (e Expr) String() string {
 		return fmt.Sprintf("(group %v)", e.Children[0])
 	case VARIABLE:
 		return fmt.Sprintf("%s", e.Tok.Lexeme)
+	case ASSIGN:
+		return fmt.Sprintf("(%v = %v)", e.Tok.Lexeme, e.Children[0])
 	}
 	// TODO Unreachable
 	return ""

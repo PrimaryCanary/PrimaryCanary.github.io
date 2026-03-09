@@ -28,6 +28,14 @@ func (e *Env) Get(name ast.Token) (ast.LoxObject, error) {
 	return ast.LoxObject{}, UndefVarError{token: name}
 }
 
+func (e *Env) Assign(name ast.Token, value ast.LoxObject) error {
+	if _, ok := e.Bindings[name.Lexeme]; ok {
+		e.Bindings[name.Lexeme] = value
+		return nil
+	}
+	return UndefVarError{name}
+}
+
 func (uve UndefVarError) Error() string {
 	return fmt.Sprintf("[line %v] Undefined variable '%v'", uve.token.Line, uve.token.Lexeme)
 }
