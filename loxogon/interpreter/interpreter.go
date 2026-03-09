@@ -133,10 +133,11 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
 		}
 		return result, nil
 	case ast.PRINT:
-		_, err := i.Evaluate(stmt.Child)
+		result, err := i.Evaluate(stmt.Child)
 		if err != nil {
 			return ast.LoxObject{}, err
 		}
+		fmt.Println(result)
 		return ast.LoxObject{}, nil
 	case ast.VAR_UNINIT:
 		i.env.Define(stmt.Name.Lexeme, ast.LoxObject{})
