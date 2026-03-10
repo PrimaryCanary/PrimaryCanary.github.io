@@ -141,6 +141,13 @@ global c
 			wantStdout: "",
 			wantErr:    nil,
 		},
+{
+			name:       "While loop",
+			source:     "var a=0; while(a < 5) { print a; a = a+1; }",
+			wantResult: float64(5),
+			wantStdout: "0\n1\n2\n3\n4\n",
+			wantErr:    nil,
+		},
 	}
 	for _, tt := range tests {
 

@@ -22,8 +22,9 @@ const (
 	PRINT
 	VAR
 	VAR_UNINIT
-	BLOCK
 	IF
+	WHILE
+	BLOCK
 )
 
 // Fat struct representation of expressions
@@ -82,10 +83,6 @@ func NewPrintStmt(e Expr) Stmt {
 	return Stmt{Kind: PRINT, Child: e}
 }
 
-func NewBlock(stmts []Stmt) Stmt {
-	return Stmt{Kind: BLOCK, Stmts: stmts}
-}
-
 func NewIf(condition Expr, branches ...Stmt) Stmt {
 	switch len(branches) {
 	case 1:
@@ -97,6 +94,13 @@ func NewIf(condition Expr, branches ...Stmt) Stmt {
 	}
 }
 
+func NewWhile(condition Expr, body Stmt) Stmt {
+	return Stmt{Kind: WHILE, Child: condition, Stmts: []Stmt{body}}
+}
+
+func NewBlock(stmts []Stmt) Stmt {
+	return Stmt{Kind: BLOCK, Stmts: stmts}
+}
 func NewVarDecl(name Token, e Expr) Stmt {
 	return Stmt{Kind: VAR, Name: name, Child: e}
 }

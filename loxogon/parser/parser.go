@@ -23,10 +23,11 @@ type ParseError struct {
 // declaration    → varDecl | statement ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // program        → statement* EOF ;
-// statement      → exprStmt | printStmt | block | ifStmt;
+// statement      → exprStmt | printStmt | ifStmt | whileStmt | block ;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
 // ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
+// whileStmt      → "while" "(" expression ")" statement ;
 // block          → "{" declaration* "}" ;
 // expression     → assignment ;
 // assignment     → IDENTIFIER "=" assignment | logic_or;
@@ -95,13 +96,16 @@ func (p *parser) varDecl() (ast.Stmt, error) {
 	return decl, nil
 }
 
-// statement → exprStmt | printStmt | block | ifStmt;
+// statement → exprStmt | printStmt | ifStmt | whileStmt | block ;
 func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(ast.PRINT_TOK) {
 		return p.printStatement()
 	}
 	if p.match(ast.IF_TOK) {
 		return p.ifStmt()
+	}
+	if p.match(ast.WHILE_TOK) {
+		return p.whileStmt()
 	}
 	if p.match(ast.LEFT_BRACE) {
 		stmts, err := p.block()
@@ -144,6 +148,28 @@ func (p *parser) ifStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewIf(cond, thenBranch), nil
+}
+
+// whileStmt → "while" "(" expression ")" statement ;
+func (p *parser) whileStmt() (ast.Stmt, error) {
+	_, err := p.consume(ast.LEFT_PAREN, "expected '(' after while keyword")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+
+	cond, err := p.expression()
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	_, err = p.consume(ast.RIGHT_PAREN, "expected ')' after while condition")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	body, err := p.statement()
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	return ast.NewWhile(cond, body), nil
 }
 
 // block → "{" declaration* "}" ;
@@ -339,7 +365,7 @@ func (p *parser) synchronize() {
 		}
 		switch p.peek().Kind {
 		case ast.CLASS, ast.FUN, ast.VAR_TOK, ast.FOR,
-			ast.IF_TOK, ast.WHILE, ast.PRINT_TOK, ast.RETURN:
+			ast.IF_TOK, ast.WHILE_TOK, ast.PRINT_TOK, ast.RETURN:
 			return
 		}
 		p.advance()

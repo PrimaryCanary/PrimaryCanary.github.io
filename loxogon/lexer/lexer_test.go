@@ -128,7 +128,7 @@ func TestLexer(t *testing.T) {
 				{ast.THIS, ""},
 				{ast.TRUE, ""},
 				{ast.VAR_TOK, ""},
-				{ast.WHILE, ""},
+				{ast.WHILE_TOK, ""},
 			},
 		},
 		{

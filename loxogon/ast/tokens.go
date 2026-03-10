@@ -49,7 +49,7 @@ const (
 	THIS
 	TRUE
 	VAR_TOK
-	WHILE
+	WHILE_TOK
 
 	EOF
 )
@@ -120,7 +120,7 @@ var keywords = map[string]TokenKind{
 	"this":   THIS,
 	"true":   TRUE,
 	"var":    VAR_TOK,
-	"while":  WHILE,
+	"while":  WHILE_TOK,
 }
 
 func IsKeyword(text string) (TokenKind, bool) {

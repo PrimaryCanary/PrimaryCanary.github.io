@@ -219,6 +219,21 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
 			return nil
 		}
 		return nil
+	case ast.WHILE:
+		for {
+			cond, err := i.Evaluate(stmt.Child)
+			if err != nil {
+				return err
+			}
+			if isTruthy(cond) {
+				err = i.EvaluateStmt(stmt.Stmts[0])
+				if err != nil {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
 	}
 
 	// Unreachable
