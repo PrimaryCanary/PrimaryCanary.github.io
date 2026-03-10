@@ -79,9 +79,9 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 			} else if l, r, err := operandsToStrings(expr.Tok, left, right); err == nil {
 				return ast.LoxObject{Value: l + r}, nil
 			} else {
-				err := fmt.Errorf("[line %v] Runtime error: operator '+' requires number or string operands, got %v and %v",
-					expr.Tok, left, right)
-				return ast.LoxObject{}, err
+				str := fmt.Sprintf("operator '+' requires number or string operands, got '%v' and '%v'",
+					left, right)
+				return ast.LoxObject{}, RuntimeError{expr.Tok, str}
 			}
 
 		case ast.MINUS:
@@ -97,10 +97,12 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 			}
 			return ast.LoxObject{Value: l * r}, nil
 		case ast.SLASH:
-			// TODO divide by zero
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
 				return ast.LoxObject{}, err
+			}
+			if r == 0.0 {
+				return ast.LoxObject{}, RuntimeError{expr.Tok, "divided by zero"}
 			}
 			return ast.LoxObject{Value: l / r}, nil
 		case ast.GREATER:
@@ -151,9 +153,13 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
 		if err != nil {
 			return ast.LoxObject{}, err
 		}
-		i.output.Write([]byte(result.String() + "\n"))
+		_, err = i.output.Write([]byte(result.String() + "\n"))
+		if err != nil {
+			return ast.LoxObject{}, fmt.Errorf("failed writing to io.Writer: %w", err)
+		}
 		return ast.LoxObject{}, nil
 	case ast.VAR_UNINIT:
+		// TODO runtime error on uninitialized values
 		i.env.Define(stmt.Name.Lexeme, ast.LoxObject{})
 		return ast.LoxObject{}, nil
 	case ast.VAR:
@@ -209,9 +215,9 @@ func operandToNumber(operator ast.Token, operand ast.LoxObject) (float64, error)
 		return v, nil
 	}
 
-	// TODO return concrete error
-	return 0, fmt.Errorf("[line %v] Runtime error: operator '%v' requires numeric operand, got %v",
-		operator.Line, operator.Lexeme, operand)
+	str := fmt.Sprintf("operator '%v' requires numeric operand, got %v",
+		operator.Lexeme, operand)
+	return 0, RuntimeError{operator, str}
 }
 
 func operandsToNumbers(operator ast.Token, left, right ast.LoxObject) (float64, float64, error) {
@@ -221,10 +227,9 @@ func operandsToNumbers(operator ast.Token, left, right ast.LoxObject) (float64, 
 		return l, r, nil
 	}
 
-	// TODO return concrete error
-	err := fmt.Errorf("[line %v] Runtime error: operator '%v' requires numeric operands, got %v and %v",
-		operator.Line, operator.Lexeme, left, right)
-	return 0, 0, err
+	str := fmt.Sprintf("operator '%v' requires numeric operands, got '%v' and '%v'",
+		operator.Lexeme, left, right)
+	return 0, 0, RuntimeError{operator, str}
 }
 
 func operandsToStrings(operator ast.Token, left, right ast.LoxObject) (string, string, error) {
@@ -234,8 +239,16 @@ func operandsToStrings(operator ast.Token, left, right ast.LoxObject) (string, s
 		return l, r, nil
 	}
 
-	// TODO return concrete error
-	err := fmt.Errorf("[line %v] Runtime error: operator '%v' requires string operands, got %v and %v",
-		operator.Line, operator.Lexeme, left, right)
-	return "", "", err
+	str := fmt.Sprintf("operator '%v' requires string operands, got '%v' and '%v'",
+		operator.Lexeme, left, right)
+	return "", "", RuntimeError{operator, str}
+}
+
+type RuntimeError struct {
+	tok     ast.Token
+	message string
+}
+
+func (re RuntimeError) Error() string {
+	return fmt.Sprintf("[line %v] Runtime error: %v", re.tok.Line, re.message)
 }
