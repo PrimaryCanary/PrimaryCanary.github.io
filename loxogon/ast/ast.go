@@ -24,6 +24,7 @@ const (
 	VAR_UNINIT
 	IF
 	WHILE
+	FOR
 	BLOCK
 )
 

@@ -118,7 +118,7 @@ func TestLexer(t *testing.T) {
 				{ast.ELSE, ""},
 				{ast.FALSE, ""},
 				{ast.FUN, ""},
-				{ast.FOR, ""},
+				{ast.FOR_TOK, ""},
 				{ast.IF_TOK, ""},
 				{ast.NIL, ""},
 				{ast.OR, ""},

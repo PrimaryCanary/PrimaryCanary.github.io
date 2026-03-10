@@ -23,11 +23,12 @@ type ParseError struct {
 // declaration    → varDecl | statement ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // program        → statement* EOF ;
-// statement      → exprStmt | printStmt | ifStmt | whileStmt | block ;
+// statement      → exprStmt | printStmt | ifStmt | whileStmt | forStmt | block ;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
 // ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 // whileStmt      → "while" "(" expression ")" statement ;
+// forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
 // block          → "{" declaration* "}" ;
 // expression     → assignment ;
 // assignment     → IDENTIFIER "=" assignment | logic_or;
@@ -107,6 +108,9 @@ func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(ast.WHILE_TOK) {
 		return p.whileStmt()
 	}
+	if p.match(ast.FOR_TOK) {
+		return p.forStmt()
+	}
 	if p.match(ast.LEFT_BRACE) {
 		stmts, err := p.block()
 		if err != nil {
@@ -170,6 +174,83 @@ func (p *parser) whileStmt() (ast.Stmt, error) {
 		return ast.Stmt{}, err
 	}
 	return ast.NewWhile(cond, body), nil
+}
+
+// forStmt → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
+func (p *parser) forStmt() (ast.Stmt, error) {
+	_, err := p.consume(ast.LEFT_PAREN, "expected '(' after for keyword")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+
+	// Pointers because they are optional
+	var init *ast.Stmt = nil
+	var cond *ast.Expr = nil
+	var incr *ast.Expr = nil
+
+	if p.match(ast.SEMICOLON) {
+		init = nil
+	} else if p.match(ast.VAR_TOK) {
+		i, err := p.varDecl()
+		if err != nil {
+			return ast.Stmt{}, err
+		}
+		init = &i
+	} else {
+		i, err := p.expressionStatement()
+		if err != nil {
+			return ast.Stmt{}, err
+		}
+		init = &i
+	}
+
+	if !p.check(ast.SEMICOLON) {
+		c, err := p.expression()
+		if err != nil {
+			return ast.Stmt{}, err
+		}
+		cond = &c
+	}
+	_, err = p.consume(ast.SEMICOLON, "expected ';' after for loop condition")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+
+	if !p.check(ast.RIGHT_PAREN) {
+		i, err := p.expression()
+		if err != nil {
+			return ast.Stmt{}, err
+		}
+		incr = &i
+	}
+	_, err = p.consume(ast.RIGHT_PAREN, "expected ')' after for statement")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+
+	body, err := p.statement()
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+
+	// for(init; cond; incr) body -> { init; while(cond) { body; incr; } }
+	desugared := make([]ast.Stmt, 0)
+	if init != nil {
+		desugared = append(desugared, *init)
+	}
+	// Condition not present => always true
+	if cond == nil {
+		c := ast.NewLiteral(true)
+		cond = &c
+	}
+	if incr == nil {
+		desugared = append(desugared, ast.NewWhile(*cond, body))
+	} else {
+		desugaredIncr := ast.NewBlock([]ast.Stmt{body, ast.NewExprStmt(*incr)})
+		desugared = append(desugared, ast.NewWhile(*cond, desugaredIncr))
+	}
+
+	return ast.NewBlock(desugared), nil
 }
 
 // block → "{" declaration* "}" ;
@@ -364,7 +445,7 @@ func (p *parser) synchronize() {
 			return
 		}
 		switch p.peek().Kind {
-		case ast.CLASS, ast.FUN, ast.VAR_TOK, ast.FOR,
+		case ast.CLASS, ast.FUN, ast.VAR_TOK, ast.FOR_TOK,
 			ast.IF_TOK, ast.WHILE_TOK, ast.PRINT_TOK, ast.RETURN:
 			return
 		}

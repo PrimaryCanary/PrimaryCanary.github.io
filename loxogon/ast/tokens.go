@@ -39,7 +39,7 @@ const (
 	ELSE
 	FALSE
 	FUN
-	FOR
+	FOR_TOK
 	IF_TOK
 	NIL
 	OR
@@ -109,7 +109,7 @@ var keywords = map[string]TokenKind{
 	"class":  CLASS,
 	"else":   ELSE,
 	"false":  FALSE,
-	"for":    FOR,
+	"for":    FOR_TOK,
 	"fun":    FUN,
 	"if":     IF_TOK,
 	"nil":    NIL,

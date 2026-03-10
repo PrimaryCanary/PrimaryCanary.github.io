@@ -141,12 +141,48 @@ global c
 			wantStdout: "",
 			wantErr:    nil,
 		},
-{
+		{
 			name:       "While loop",
 			source:     "var a=0; while(a < 5) { print a; a = a+1; }",
 			wantResult: float64(5),
 			wantStdout: "0\n1\n2\n3\n4\n",
 			wantErr:    nil,
+		},
+		{
+			name:       "For loop only condition",
+			source:     "for (; false;) print 5;",
+			wantResult: nil,
+			wantStdout: "",
+			wantErr:    nil,
+		},
+		{
+			name:       "For loop condition and incr",
+			source:     "var a=0; for (; a < 3; a=a+1) print a;",
+			wantResult: float64(3),
+			wantStdout: "0\n1\n2\n",
+			wantErr:    nil,
+		},
+		{
+			name:       "For loop all three",
+			source:     "for (var a=0; a < 3; a=a+1) print a;",
+			wantResult: float64(3),
+			wantStdout: "0\n1\n2\n",
+			wantErr:    nil,
+		},
+		{
+			name: "Fibonacci numbers",
+			source: `var a = 0;
+var temp;
+
+for (var b = 1; a < 10000; b = temp + b) {
+  print a;
+  temp = a;
+  a = b;
+}`,
+			wantResult: float64(17711),
+			wantStdout: "0\n1\n1\n2\n3\n5\n8\n13\n21\n34\n55\n89\n" +
+				"144\n233\n377\n610\n987\n1597\n2584\n4181\n6765\n",
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
