@@ -64,6 +64,26 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 		case ast.BANG:
 			return ast.LoxObject{Value: !isTruthy(value)}, nil
 		}
+	case ast.LOGICAL:
+		left, err := i.Evaluate(expr.Children[0])
+		if err != nil {
+			return ast.LoxObject{}, err
+		}
+		switch expr.Tok.Kind {
+		case ast.OR:
+			if isTruthy(left) {
+				return left, nil
+			}
+		case ast.AND:
+			if !isTruthy(left) {
+				return left, nil
+			}
+		}
+		right, err := i.Evaluate(expr.Children[1])
+		if err != nil {
+			return ast.LoxObject{}, err
+		}
+		return right, nil
 	case ast.BINARY:
 		left, err := i.Evaluate(expr.Children[0])
 		if err != nil {

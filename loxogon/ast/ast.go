@@ -10,6 +10,7 @@ type StmtKind int
 
 const (
 	BINARY ExprKind = iota
+	LOGICAL
 	UNARY
 	LITERAL
 	GROUPING
@@ -51,6 +52,10 @@ func NewLiteral(data any) Expr {
 
 func NewBinary(operator Token, left, right Expr) Expr {
 	return Expr{Kind: BINARY, Tok: operator, Children: []Expr{left, right}}
+}
+
+func NewLogical(operator Token, left, right Expr) Expr {
+	return Expr{Kind: LOGICAL, Tok: operator, Children: []Expr{left, right}}
 }
 
 func NewUnary(operator Token, e Expr) Expr {

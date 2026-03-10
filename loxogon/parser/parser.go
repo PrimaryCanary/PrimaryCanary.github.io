@@ -29,7 +29,9 @@ type ParseError struct {
 // ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 // block          → "{" declaration* "}" ;
 // expression     → assignment ;
-// assignment     → IDENTIFIER "=" assignment | equality ;
+// assignment     → IDENTIFIER "=" assignment | logic_or;
+// logic_or       → logic_and ( "or" logic_and )* ;
+// logic_and      → equality ( "and" equality )* ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
@@ -192,9 +194,9 @@ func (p *parser) expression() (ast.Expr, error) {
 	return p.assignment()
 }
 
-// assignment → IDENTIFIER "=" assignment | equality ;
+// assignment → IDENTIFIER "=" assignment | logic_or;
 func (p *parser) assignment() (ast.Expr, error) {
-	expr, err := p.equality()
+	expr, err := p.logicOr()
 	if err != nil {
 		return ast.Expr{}, err
 	}
@@ -216,7 +218,9 @@ func (p *parser) assignment() (ast.Expr, error) {
 	return expr, nil
 }
 
-func (p *parser) leftAssocBinaryExpr(operand func() (ast.Expr, error), kinds ...ast.TokenKind) (ast.Expr, error) {
+func (p *parser) leftAssocBinaryExpr(operand func() (ast.Expr, error),
+	exprCreator func(ast.Token, ast.Expr, ast.Expr) ast.Expr,
+	kinds ...ast.TokenKind) (ast.Expr, error) {
 	left, err := operand()
 	if err != nil {
 		return ast.Expr{}, err
@@ -227,29 +231,39 @@ func (p *parser) leftAssocBinaryExpr(operand func() (ast.Expr, error), kinds ...
 		if err != nil {
 			return ast.Expr{}, err
 		}
-		left = ast.NewBinary(operator, left, right)
+		left = exprCreator(operator, left, right)
 	}
 	return left, nil
 }
 
+// logic_or → logic_and ( "or" logic_and )* ;
+func (p *parser) logicOr() (ast.Expr, error) {
+	return p.leftAssocBinaryExpr(p.logicAnd, ast.NewLogical, ast.OR)
+}
+
+// logic_and → equality ( "and" equality )* ;
+func (p *parser) logicAnd() (ast.Expr, error) {
+	return p.leftAssocBinaryExpr(p.equality, ast.NewLogical, ast.AND)
+}
+
 // equality → comparison ( ( "!=" | "==" ) comparison )*
 func (p *parser) equality() (ast.Expr, error) {
-	return p.leftAssocBinaryExpr(p.comparison, ast.BANG_EQUAL, ast.EQUAL_EQUAL)
+	return p.leftAssocBinaryExpr(p.comparison, ast.NewBinary, ast.BANG_EQUAL, ast.EQUAL_EQUAL)
 }
 
 // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 func (p *parser) comparison() (ast.Expr, error) {
-	return p.leftAssocBinaryExpr(p.term, ast.GREATER, ast.GREATER_EQUAL, ast.LESS, ast.LESS_EQUAL)
+	return p.leftAssocBinaryExpr(p.term, ast.NewBinary, ast.GREATER, ast.GREATER_EQUAL, ast.LESS, ast.LESS_EQUAL)
 }
 
 // term → factor ( ( "-" | "+" ) factor )*
 func (p *parser) term() (ast.Expr, error) {
-	return p.leftAssocBinaryExpr(p.factor, ast.MINUS, ast.PLUS)
+	return p.leftAssocBinaryExpr(p.factor, ast.NewBinary, ast.MINUS, ast.PLUS)
 }
 
 // factor → unary ( ( "/" | "*" ) unary )*
 func (p *parser) factor() (ast.Expr, error) {
-	return p.leftAssocBinaryExpr(p.unary, ast.STAR, ast.SLASH)
+	return p.leftAssocBinaryExpr(p.unary, ast.NewBinary, ast.STAR, ast.SLASH)
 }
 
 // unary → ( "!" | "-" ) unary | primary

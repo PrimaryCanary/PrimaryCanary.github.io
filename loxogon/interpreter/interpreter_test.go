@@ -113,6 +113,34 @@ global c
 			wantStdout: "foobar\n",
 			wantErr:    nil,
 		},
+		{
+			name:       "Logical or short circuit",
+			source:     "2 or 3;",
+			wantResult: float64(2),
+			wantStdout: "",
+			wantErr:    nil,
+		},
+		{
+			name:       "Logical or long circuit",
+			source:     "nil or 3;",
+			wantResult: float64(3),
+			wantStdout: "",
+			wantErr:    nil,
+		},
+		{
+			name:       "Logical and short circuit",
+			source:     "nil and 3;",
+			wantResult: nil,
+			wantStdout: "",
+			wantErr:    nil,
+		},
+		{
+			name:       "Logical and long circuit",
+			source:     "2 and 3;",
+			wantResult: float64(3),
+			wantStdout: "",
+			wantErr:    nil,
+		},
 	}
 	for _, tt := range tests {
 
