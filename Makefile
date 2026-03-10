@@ -3,7 +3,7 @@ LOX_BINARY = loxogon.exe
 GOFLAGS = -gcflags="all=-N -l"
 
 .PHONY: all
-all: run-loxogon
+all: test run-loxogon
 
 .PHONY: run-loxogon
 run-loxogon: loxogon
