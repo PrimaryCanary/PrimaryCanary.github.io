@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"loxogon/ast"
 	"loxogon/lexer"
 	"loxogon/parser"
 	"reflect"
@@ -131,18 +130,17 @@ global c
 			}
 
 			var stdout strings.Builder
-			var gotResult ast.LoxObject
 			var gotErrs error
 			i := NewWithWriter(&stdout)
 			for _, st := range stmts {
-				gotResult, gotErrs = i.EvaluateStmt(st)
+				gotErrs = i.EvaluateStmt(st)
 				if !reflect.DeepEqual(gotErrs, tt.wantErr) {
 					t.Errorf("%v gotErrs = %v, want %v", tt.name, gotErrs, tt.wantErr)
 				}
 			}
-			if !reflect.DeepEqual(tt.wantResult, gotResult.Value) {
+			if !reflect.DeepEqual(tt.wantResult, i.LastExpr.Value) {
 				// if want == gotResult.Value {
-				t.Errorf("%v gotResult = \n%v\n, want \n%v\n", tt.name, gotResult.Value, tt.wantResult)
+				t.Errorf("%v gotResult = \n%v\n, want \n%v\n", tt.name, i.LastExpr.Value, tt.wantResult)
 			}
 			gotStdout := stdout.String()
 			if strings.Compare(gotStdout, tt.wantStdout) != 0 {

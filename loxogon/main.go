@@ -55,15 +55,14 @@ func run(code string, interp interpreter.Interpreter) (ast.LoxObject, int, error
 		return ast.LoxObject{}, 2, err
 	}
 
-	var result ast.LoxObject
 	for _, stmt := range parsed {
-		result, err = interp.EvaluateStmt(stmt)
+		err = interp.EvaluateStmt(stmt)
 		if err != nil {
 			return ast.LoxObject{}, 3, err
 		}
 	}
 
-	return result, 0, nil
+	return interp.LastExpr, 0, nil
 }
 
 func runRepl(interp interpreter.Interpreter) (int, error) {

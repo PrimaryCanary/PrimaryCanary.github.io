@@ -9,16 +9,17 @@ import (
 )
 
 type Interpreter struct {
-	env    environment.Env
-	output io.Writer
+	env      environment.Env
+	output   io.Writer
+	LastExpr ast.LoxObject
 }
 
 func New() Interpreter {
-	return Interpreter{environment.New(), os.Stdout}
+	return Interpreter{environment.New(), os.Stdout, ast.LoxObject{}}
 }
 
 func NewWithWriter(w io.Writer) Interpreter {
-	return Interpreter{environment.New(), w}
+	return Interpreter{environment.New(), w, ast.LoxObject{}}
 }
 
 func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
@@ -140,65 +141,64 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 	panic("Hit unreachable state in expression evaluation")
 }
 
-func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
+func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
+	i.LastExpr = ast.LoxObject{}
 	switch stmt.Kind {
 	case ast.EXPR:
 		result, err := i.Evaluate(stmt.Child)
 		if err != nil {
-			return ast.LoxObject{}, err
+			return err
 		}
-		return result, nil
+		i.LastExpr = result
+		return nil
 	case ast.PRINT:
 		result, err := i.Evaluate(stmt.Child)
 		if err != nil {
-			return ast.LoxObject{}, err
+			return err
 		}
 		_, err = i.output.Write([]byte(result.String() + "\n"))
 		if err != nil {
-			return ast.LoxObject{}, fmt.Errorf("failed writing to io.Writer: %w", err)
+			return fmt.Errorf("failed writing to io.Writer: %w", err)
 		}
-		return ast.LoxObject{}, nil
+		return nil
 	case ast.VAR_UNINIT:
 		// TODO runtime error on uninitialized values
 		i.env.Define(stmt.Name.Lexeme, ast.LoxObject{})
-		return ast.LoxObject{}, nil
+		return nil
 	case ast.VAR:
 		value, err := i.Evaluate(stmt.Child)
 		if err != nil {
-			return ast.LoxObject{}, err
+			return err
 		}
 		i.env.Define(stmt.Name.Lexeme, value)
-		return ast.LoxObject{}, nil
+		return nil
 	case ast.BLOCK:
 		outerScope := i.env
 		i.env = environment.NewWithParent(outerScope)
 		for _, st := range stmt.Stmts {
-			_, err := i.EvaluateStmt(st)
-			if err != nil {
-				return ast.LoxObject{}, err
+			if err := i.EvaluateStmt(st); err != nil {
+				return err
 			}
 		}
 		i.env = outerScope
-		return ast.LoxObject{}, nil
+		return nil
 	case ast.IF:
 		cond, err := i.Evaluate(stmt.Child)
 		if err != nil {
-			return ast.LoxObject{}, err
+			return err
 		}
-		if isTruthy(cond.Value) {
-			result, err := i.EvaluateStmt(stmt.Stmts[0])
-			if err != nil {
-				return ast.LoxObject{}, err
+		if isTruthy(cond) {
+			if err := i.EvaluateStmt(stmt.Stmts[0]); err != nil {
+				return err
 			}
-			return result, nil
+			return nil
 		} else if len(stmt.Stmts) > 1 {
-			result, err := i.EvaluateStmt(stmt.Stmts[1])
-			if err != nil {
-				return ast.LoxObject{}, err
+			if err := i.EvaluateStmt(stmt.Stmts[1]); err != nil {
+				return err
 			}
-			return result, nil
+			return nil
 		}
-		return ast.LoxObject{}, nil
+		return nil
 	}
 
 	// Unreachable
@@ -218,12 +218,12 @@ func isEqual(left, right any) bool {
 }
 
 // Nil and false are the only falsey values
-func isTruthy(value any) bool {
+func isTruthy(obj ast.LoxObject) bool {
 	// TODO I'm not sure if this is a bug
-	if value == nil {
+	if obj.Value == nil {
 		return false
 	}
-	if boolean, ok := value.(bool); ok {
+	if boolean, ok := obj.Value.(bool); ok {
 		return boolean
 	}
 	return true
