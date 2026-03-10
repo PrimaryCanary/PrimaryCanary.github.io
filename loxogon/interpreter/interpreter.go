@@ -2,16 +2,23 @@ package interpreter
 
 import (
 	"fmt"
+	"io"
 	"loxogon/ast"
 	"loxogon/environment"
+	"os"
 )
 
 type Interpreter struct {
-	env environment.Env
+	env    environment.Env
+	output io.Writer
 }
 
 func New() Interpreter {
-	return Interpreter{environment.New()}
+	return Interpreter{environment.New(), os.Stdout}
+}
+
+func NewWithWriter(w io.Writer) Interpreter {
+	return Interpreter{environment.New(), w}
 }
 
 func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
@@ -144,7 +151,7 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
 		if err != nil {
 			return ast.LoxObject{}, err
 		}
-		fmt.Println(result)
+		i.output.Write([]byte(result.String() + "\n"))
 		return ast.LoxObject{}, nil
 	case ast.VAR_UNINIT:
 		i.env.Define(stmt.Name.Lexeme, ast.LoxObject{})
@@ -155,6 +162,17 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
 			return ast.LoxObject{}, err
 		}
 		i.env.Define(stmt.Name.Lexeme, value)
+		return ast.LoxObject{}, nil
+	case ast.BLOCK:
+		outerScope := i.env
+		i.env = environment.NewWithParent(outerScope)
+		for _, st := range stmt.Stmts {
+			_, err := i.EvaluateStmt(st)
+			if err != nil {
+				return ast.LoxObject{}, err
+			}
+		}
+		i.env = outerScope
 		return ast.LoxObject{}, nil
 	}
 

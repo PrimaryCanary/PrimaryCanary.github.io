@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type ExprKind int
 type StmtKind int
@@ -18,6 +21,7 @@ const (
 	PRINT
 	VAR
 	VAR_UNINIT
+	BLOCK
 )
 
 // Fat struct representation of expressions
@@ -33,6 +37,7 @@ type Stmt struct {
 	Kind  StmtKind
 	Name  Token
 	Child Expr
+	Stmts []Stmt
 }
 
 type LoxObject struct {
@@ -71,6 +76,10 @@ func NewPrintStmt(e Expr) Stmt {
 	return Stmt{Kind: PRINT, Child: e}
 }
 
+func NewBlock(stmts []Stmt) Stmt {
+	return Stmt{Kind: BLOCK, Stmts: stmts}
+}
+
 func NewVarDecl(name Token, e Expr) Stmt {
 	return Stmt{Kind: VAR, Name: name, Child: e}
 }
@@ -101,13 +110,15 @@ func (e Expr) String() string {
 func (s Stmt) String() string {
 	switch s.Kind {
 	case EXPR:
-		return fmt.Sprintf("%v;", s.Child)
+		return fmt.Sprintf("%v", s.Child)
 	case PRINT:
-		return fmt.Sprintf("(print %v);", s.Child)
+		return fmt.Sprintf("(print %v)", s.Child)
 	case VAR:
-		return fmt.Sprintf("(var %v=%v);", s.Name.Lexeme, s.Child)
+		return fmt.Sprintf("(var %v=%v)", s.Name.Lexeme, s.Child)
 	case VAR_UNINIT:
-		return fmt.Sprintf("(var %v);", s.Name.Lexeme)
+		return fmt.Sprintf("(var %v)", s.Name.Lexeme)
+	case BLOCK:
+		return fmt.Sprintf("{%v}", StmtsToString(s.Stmts))
 	}
 	return ""
 }
@@ -117,4 +128,14 @@ func (lo LoxObject) String() string {
 		return "nil"
 	}
 	return fmt.Sprintf("%v", lo.Value)
+}
+
+func StmtsToString(stmts []Stmt) string {
+	var sb strings.Builder
+	for _, stmt := range stmts {
+		sb.WriteString(stmt.String())
+		sb.WriteString(" ")
+	}
+	// Remove trailing space
+	return sb.String()[:sb.Len()-1]
 }

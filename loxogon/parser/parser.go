@@ -23,9 +23,10 @@ type ParseError struct {
 // declaration    → varDecl | statement ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // program        → statement* EOF ;
-// statement      → exprStmt | printStmt ;
+// statement      → exprStmt | printStmt | block;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
+// block          → "{" declaration* "}" ;
 // expression     → assignment ;
 // assignment     → IDENTIFIER "=" assignment | equality ;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -91,12 +92,36 @@ func (p *parser) varDecl() (ast.Stmt, error) {
 	return decl, nil
 }
 
-// statement → exprStmt | printStmt ;
+// statement → exprStmt | printStmt | block;
 func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(ast.PRINT_TOK) {
 		return p.printStatement()
 	}
+	if p.match(ast.LEFT_BRACE) {
+		stmts, err := p.block()
+		if err != nil {
+			return ast.Stmt{}, err
+		}
+		return ast.NewBlock(stmts), nil
+	}
 	return p.expressionStatement()
+}
+
+// block → "{" declaration* "}" ;
+func (p *parser) block() ([]ast.Stmt, error) {
+	stmts := make([]ast.Stmt, 0)
+	for !p.check(ast.RIGHT_BRACE) && !p.atEnd() {
+		st, err := p.declaration()
+		if err != nil {
+			return nil, err
+		}
+		stmts = append(stmts, st)
+	}
+	_, err := p.consume(ast.RIGHT_BRACE, "expected '}' after block")
+	if err != nil {
+		return nil, err
+	}
+	return stmts, nil
 }
 
 // exprStmt → expression ";" ;
