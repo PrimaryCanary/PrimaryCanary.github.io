@@ -180,6 +180,25 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) (ast.LoxObject, error) {
 		}
 		i.env = outerScope
 		return ast.LoxObject{}, nil
+	case ast.IF:
+		cond, err := i.Evaluate(stmt.Child)
+		if err != nil {
+			return ast.LoxObject{}, err
+		}
+		if isTruthy(cond.Value) {
+			result, err := i.EvaluateStmt(stmt.Stmts[0])
+			if err != nil {
+				return ast.LoxObject{}, err
+			}
+			return result, nil
+		} else if len(stmt.Stmts) > 1 {
+			result, err := i.EvaluateStmt(stmt.Stmts[1])
+			if err != nil {
+				return ast.LoxObject{}, err
+			}
+			return result, nil
+		}
+		return ast.LoxObject{}, nil
 	}
 
 	// Unreachable

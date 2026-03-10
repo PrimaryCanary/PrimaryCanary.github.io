@@ -40,7 +40,7 @@ const (
 	FALSE
 	FUN
 	FOR
-	IF
+	IF_TOK
 	NIL
 	OR
 	PRINT_TOK
@@ -111,7 +111,7 @@ var keywords = map[string]TokenKind{
 	"false":  FALSE,
 	"for":    FOR,
 	"fun":    FUN,
-	"if":     IF,
+	"if":     IF_TOK,
 	"nil":    NIL,
 	"or":     OR,
 	"print":  PRINT_TOK,

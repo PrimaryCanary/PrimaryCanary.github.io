@@ -100,6 +100,20 @@ global c
 `,
 			wantErr: nil,
 		},
+		{
+			name:       "If statement",
+			source:     "if ((1<2)) {var a=1; var b=2; print a+b;}",
+			wantResult: nil,
+			wantStdout: "3\n",
+			wantErr:    nil,
+		},
+		{
+			name:       "If else statement",
+			source:     "if (!(1<2)) {var a=1; var b=2; print a+b;} else {var c=\"foo\"; var d=\"bar\"; print c+d;}",
+			wantResult: nil,
+			wantStdout: "foobar\n",
+			wantErr:    nil,
+		},
 	}
 	for _, tt := range tests {
 

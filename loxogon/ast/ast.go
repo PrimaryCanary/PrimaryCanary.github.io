@@ -22,6 +22,7 @@ const (
 	VAR
 	VAR_UNINIT
 	BLOCK
+	IF
 )
 
 // Fat struct representation of expressions
@@ -78,6 +79,17 @@ func NewPrintStmt(e Expr) Stmt {
 
 func NewBlock(stmts []Stmt) Stmt {
 	return Stmt{Kind: BLOCK, Stmts: stmts}
+}
+
+func NewIf(condition Expr, branches ...Stmt) Stmt {
+	switch len(branches) {
+	case 1:
+		return Stmt{Kind: IF, Child: condition, Stmts: []Stmt{branches[0]}}
+	case 2:
+		return Stmt{Kind: IF, Child: condition, Stmts: []Stmt{branches[0], branches[1]}}
+	default:
+		panic("Too many branches specified in if statement creation")
+	}
 }
 
 func NewVarDecl(name Token, e Expr) Stmt {
