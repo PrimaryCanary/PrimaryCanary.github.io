@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"loxogon/ast"
 	"loxogon/interpreter"
 	"loxogon/lexer"
 	"loxogon/parser"
@@ -35,30 +34,30 @@ func main() {
 	}
 }
 
-func runFile(file string, interp interpreter.Interpreter) (ast.LoxObject, int, error) {
+func runFile(file string, interp interpreter.Interpreter) (interpreter.LoxObject, int, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
-		return ast.LoxObject{}, 1, fmt.Errorf("could not read file: %w", err)
+		return interpreter.LoxObject{}, 1, fmt.Errorf("could not read file: %w", err)
 	}
 	return run(string(bytes), interp)
 }
 
-func run(code string, interp interpreter.Interpreter) (ast.LoxObject, int, error) {
+func run(code string, interp interpreter.Interpreter) (interpreter.LoxObject, int, error) {
 	l := lexer.New(code)
 	toks, err := l.ScanTokens()
 	if err != nil {
-		return ast.LoxObject{}, 1, err
+		return interpreter.LoxObject{}, 1, err
 	}
 
 	parsed, err := parser.Parse(toks)
 	if err != nil {
-		return ast.LoxObject{}, 2, err
+		return interpreter.LoxObject{}, 2, err
 	}
 
 	for _, stmt := range parsed {
 		err = interp.EvaluateStmt(stmt)
 		if err != nil {
-			return ast.LoxObject{}, 3, err
+			return interpreter.LoxObject{}, 3, err
 		}
 	}
 

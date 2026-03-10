@@ -4,70 +4,69 @@ import (
 	"fmt"
 	"io"
 	"loxogon/ast"
-	"loxogon/environment"
 	"os"
 )
 
 type Interpreter struct {
-	env      environment.Env
+	env      environment
 	output   io.Writer
-	LastExpr ast.LoxObject
+	LastExpr LoxObject
 }
 
 func New() Interpreter {
-	return Interpreter{environment.New(), os.Stdout, ast.LoxObject{}}
+	return Interpreter{NewEnv(), os.Stdout, LoxObject{}}
 }
 
 func NewWithWriter(w io.Writer) Interpreter {
-	return Interpreter{environment.New(), w, ast.LoxObject{}}
+	return Interpreter{NewEnv(), w, LoxObject{}}
 }
 
-func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
+func (i *Interpreter) Evaluate(expr ast.Expr) (LoxObject, error) {
 	// TODO handle (0/0) - (0/0). correct semantics should not be IEEE-754 compliant
 	switch expr.Kind {
 	case ast.LITERAL:
-		return ast.LoxObject{Value: expr.Data}, nil
+		return LoxObject{Value: expr.Data}, nil
 	case ast.VARIABLE:
 		value, err := i.env.Get(expr.Tok)
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 		return value, nil
 	case ast.ASSIGN:
 		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 		i.env.Assign(expr.Tok, value)
 		return value, nil
 	case ast.GROUPING:
 		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 
 		return value, nil
 	case ast.UNARY:
 		value, err := i.Evaluate(expr.Children[0])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 
 		switch expr.Tok.Kind {
 		case ast.MINUS:
 			number, err := operandToNumber(expr.Tok, value)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: -number}, nil
+			return LoxObject{Value: -number}, nil
 
 		case ast.BANG:
-			return ast.LoxObject{Value: !isTruthy(value)}, nil
+			return LoxObject{Value: !isTruthy(value)}, nil
 		}
 	case ast.LOGICAL:
 		left, err := i.Evaluate(expr.Children[0])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 		switch expr.Tok.Kind {
 		case ast.OR:
@@ -81,79 +80,79 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 		}
 		right, err := i.Evaluate(expr.Children[1])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 		return right, nil
 	case ast.BINARY:
 		left, err := i.Evaluate(expr.Children[0])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 		right, err := i.Evaluate(expr.Children[1])
 		if err != nil {
-			return ast.LoxObject{}, err
+			return LoxObject{}, err
 		}
 		switch expr.Tok.Kind {
 		case ast.PLUS:
 			if l, r, err := operandsToNumbers(expr.Tok, left, right); err == nil {
-				return ast.LoxObject{Value: l + r}, nil
+				return LoxObject{Value: l + r}, nil
 			} else if l, r, err := operandsToStrings(expr.Tok, left, right); err == nil {
-				return ast.LoxObject{Value: l + r}, nil
+				return LoxObject{Value: l + r}, nil
 			} else {
 				str := fmt.Sprintf("operator '+' requires number or string operands, got '%v' and '%v'",
 					left, right)
-				return ast.LoxObject{}, RuntimeError{expr.Tok, str}
+				return LoxObject{}, RuntimeError{expr.Tok, str}
 			}
 
 		case ast.MINUS:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: l - r}, nil
+			return LoxObject{Value: l - r}, nil
 		case ast.STAR:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: l * r}, nil
+			return LoxObject{Value: l * r}, nil
 		case ast.SLASH:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
 			if r == 0.0 {
-				return ast.LoxObject{}, RuntimeError{expr.Tok, "divided by zero"}
+				return LoxObject{}, RuntimeError{expr.Tok, "divided by zero"}
 			}
-			return ast.LoxObject{Value: l / r}, nil
+			return LoxObject{Value: l / r}, nil
 		case ast.GREATER:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: l > r}, nil
+			return LoxObject{Value: l > r}, nil
 		case ast.GREATER_EQUAL:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: l >= r}, nil
+			return LoxObject{Value: l >= r}, nil
 		case ast.LESS:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: l < r}, nil
+			return LoxObject{Value: l < r}, nil
 		case ast.LESS_EQUAL:
 			l, r, err := operandsToNumbers(expr.Tok, left, right)
 			if err != nil {
-				return ast.LoxObject{}, err
+				return LoxObject{}, err
 			}
-			return ast.LoxObject{Value: l <= r}, nil
+			return LoxObject{Value: l <= r}, nil
 		case ast.EQUAL_EQUAL:
-			return ast.LoxObject{Value: isEqual(left, right)}, nil
+			return LoxObject{Value: isEqual(left, right)}, nil
 		case ast.BANG_EQUAL:
-			return ast.LoxObject{Value: !isEqual(left, right)}, nil
+			return LoxObject{Value: !isEqual(left, right)}, nil
 		}
 	}
 
@@ -162,7 +161,7 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (ast.LoxObject, error) {
 }
 
 func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
-	i.LastExpr = ast.LoxObject{}
+	i.LastExpr = LoxObject{}
 	switch stmt.Kind {
 	case ast.EXPR:
 		result, err := i.Evaluate(stmt.Child)
@@ -183,7 +182,7 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
 		return nil
 	case ast.VAR_UNINIT:
 		// TODO runtime error on uninitialized values
-		i.env.Define(stmt.Name.Lexeme, ast.LoxObject{})
+		i.env.Define(stmt.Name.Lexeme, LoxObject{})
 		return nil
 	case ast.VAR:
 		value, err := i.Evaluate(stmt.Child)
@@ -194,7 +193,7 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
 		return nil
 	case ast.BLOCK:
 		outerScope := i.env
-		i.env = environment.NewWithParent(outerScope)
+		i.env = NewEnv(outerScope)
 		for _, st := range stmt.Stmts {
 			if err := i.EvaluateStmt(st); err != nil {
 				return err
@@ -253,7 +252,7 @@ func isEqual(left, right any) bool {
 }
 
 // Nil and false are the only falsey values
-func isTruthy(obj ast.LoxObject) bool {
+func isTruthy(obj LoxObject) bool {
 	// TODO I'm not sure if this is a bug
 	if obj.Value == nil {
 		return false
@@ -264,7 +263,7 @@ func isTruthy(obj ast.LoxObject) bool {
 	return true
 }
 
-func operandToNumber(operator ast.Token, operand ast.LoxObject) (float64, error) {
+func operandToNumber(operator ast.Token, operand LoxObject) (float64, error) {
 	if v, ok := operand.Value.(float64); ok {
 		return v, nil
 	}
@@ -274,7 +273,7 @@ func operandToNumber(operator ast.Token, operand ast.LoxObject) (float64, error)
 	return 0, RuntimeError{operator, str}
 }
 
-func operandsToNumbers(operator ast.Token, left, right ast.LoxObject) (float64, float64, error) {
+func operandsToNumbers(operator ast.Token, left, right LoxObject) (float64, float64, error) {
 	l, leftOk := left.Value.(float64)
 	r, rightOk := right.Value.(float64)
 	if leftOk && rightOk {
@@ -286,7 +285,7 @@ func operandsToNumbers(operator ast.Token, left, right ast.LoxObject) (float64, 
 	return 0, 0, RuntimeError{operator, str}
 }
 
-func operandsToStrings(operator ast.Token, left, right ast.LoxObject) (string, string, error) {
+func operandsToStrings(operator ast.Token, left, right LoxObject) (string, string, error) {
 	l, leftOk := left.Value.(string)
 	r, rightOk := right.Value.(string)
 	if leftOk && rightOk {

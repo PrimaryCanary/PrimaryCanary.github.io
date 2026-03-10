@@ -44,9 +44,6 @@ type Stmt struct {
 	Stmts []Stmt
 }
 
-type LoxObject struct {
-	Value any
-}
 
 func NewLiteral(data any) Expr {
 	return Expr{Kind: LITERAL, Data: data}
@@ -68,12 +65,12 @@ func NewGrouping(e Expr) Expr {
 	return Expr{Kind: GROUPING, Children: []Expr{e}}
 }
 
-func NewVariable(t Token) Expr {
-	return Expr{Kind: VARIABLE, Tok: t}
+func NewVariable(name Token) Expr {
+	return Expr{Kind: VARIABLE, Tok: name}
 }
 
-func NewAssign(t Token, e Expr) Expr {
-	return Expr{Kind: ASSIGN, Tok: t, Children: []Expr{e}}
+func NewAssign(name Token, e Expr) Expr {
+	return Expr{Kind: ASSIGN, Tok: name, Children: []Expr{e}}
 }
 
 func NewExprStmt(e Expr) Stmt {
@@ -143,13 +140,6 @@ func (s Stmt) String() string {
 		return fmt.Sprintf("{%v}", StmtsToString(s.Stmts))
 	}
 	return ""
-}
-
-func (lo LoxObject) String() string {
-	if lo.Value == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("%v", lo.Value)
 }
 
 func StmtsToString(stmts []Stmt) string {

@@ -1,44 +1,45 @@
-package environment
+package interpreter
 
 import (
 	"fmt"
 	"loxogon/ast"
 )
 
-type Env struct {
+type environment struct {
 	// Bindings in the local scope
-	bindings map[string]ast.LoxObject
+	bindings map[string]LoxObject
 	// Environment of enclosing scope
-	parent *Env
+	parent *environment
 }
 
 type UndefVarError struct {
 	token ast.Token
 }
 
-func New() Env {
-	return Env{bindings: make(map[string]ast.LoxObject), parent: nil}
+func NewEnv(parent ...environment) environment {
+	if len(parent) == 0 {
+		return environment{bindings: make(map[string]LoxObject), parent: nil}
+	} else {
+		return environment{bindings: make(map[string]LoxObject), parent: &parent[0]}
+
+	}
 }
 
-func NewWithParent(par Env) Env {
-	return Env{bindings: make(map[string]ast.LoxObject), parent: &par}
-}
-
-func (e *Env) Define(name string, value ast.LoxObject) {
+func (e *environment) Define(name string, value LoxObject) {
 	e.bindings[name] = value
 }
 
-func (e *Env) Get(name ast.Token) (ast.LoxObject, error) {
+func (e *environment) Get(name ast.Token) (LoxObject, error) {
 	if value, ok := e.bindings[name.Lexeme]; ok {
 		return value, nil
 	}
 	if e.parent != nil {
 		return e.parent.Get(name)
 	}
-	return ast.LoxObject{}, UndefVarError{token: name}
+	return LoxObject{}, UndefVarError{token: name}
 }
 
-func (e *Env) Assign(name ast.Token, value ast.LoxObject) error {
+func (e *environment) Assign(name ast.Token, value LoxObject) error {
 	if _, ok := e.bindings[name.Lexeme]; ok {
 		e.bindings[name.Lexeme] = value
 		return nil
