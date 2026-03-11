@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lox Playground</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<h1>Lox Playground</h1>
+
+<select id="examples">
+<option value="hello">Hello World</option>
+<option value="math">Math</option>
+<option value="fib" selected>Fibonacci</option>
+<option value="loop">Loop</option>
+</select>
+
+<button id="run">Run</button>
+<button id="share">Share</button>
+</header>
+<main>
+
+<section class="editor">
+<textarea id="source">
+// Example
+print 1 + 2 * 3;
+</textarea>
+</section>
+
+<section class="output">
+<h3>Output</h3>
+<pre id="output"></pre>
+</section>
+
+</main>
+
+<script src="wasm_exec.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

@@ -1,9 +1,10 @@
 GO = go.exe
-LOX_BINARY = loxogon.exe
-GOFLAGS = -gcflags="all=-N -l"
+GOFLAGS = 
+LOX_BINARY = cmd/loxogon/loxogon.exe
+PWSH = pwsh.exe -Command
 
 .PHONY: all
-all: test run-loxogon
+all: loxogon-wasm test run-loxogon
 
 .PHONY: run-loxogon
 run-loxogon: loxogon
@@ -11,7 +12,12 @@ run-loxogon: loxogon
 
 .PHONY: loxogon
 loxogon:
-	$(GO) build -C loxogon $(GOFLAGS) 
+	$(GO) build -C loxogon/cmd/loxogon $(GOFLAGS) 
+
+.PHONY: loxogon-wasm
+loxogon-wasm:
+	$(PWSH) '$$env:GOOS="js"; $$env:GOARCH="wasm"; go build -C loxogon/cmd/wasm -o loxogon.wasm'
+	cp loxogon/cmd/wasm/loxogon.wasm playground/
 
 .PHONY: test
 test:
