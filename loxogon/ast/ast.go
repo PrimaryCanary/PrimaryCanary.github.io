@@ -28,6 +28,8 @@ const (
 	WHILE
 	FOR
 	FUN
+	RETURN
+	RETURN_EMPTY
 	BLOCK
 )
 
@@ -115,6 +117,15 @@ func NewFun(name Token, params []Token, body []Stmt) Stmt {
 	toks := slices.Concat([]Token{name}, params)
 	b := NewBlock(body)
 	return Stmt{Kind: FUN, Tokens: toks, Stmts: []Stmt{b}}
+}
+
+func NewReturn(keyword Token, e Expr) Stmt {
+	return Stmt{Kind: RETURN, Tokens: []Token{keyword}, Child: e}
+}
+
+// TODO investigate SENTINEL ExprKind to recognize uninit exprs
+func NewReturnEmpty(keyword Token) Stmt {
+	return Stmt{Kind: RETURN_EMPTY, Tokens: []Token{keyword}}
 }
 
 func NewBlock(stmts []Stmt) Stmt {

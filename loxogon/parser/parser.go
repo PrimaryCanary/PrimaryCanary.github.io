@@ -26,12 +26,13 @@ type ParseError struct {
 // parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // program        → statement* EOF ;
-// statement      → exprStmt | printStmt | ifStmt | whileStmt | forStmt | block ;
+// statement      → exprStmt | printStmt | ifStmt | whileStmt | forStmt | returnStmt | block ;
 // exprStmt       → expression ";" ;
 // printStmt      → "print" expression ";" ;
 // ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 // whileStmt      → "while" "(" expression ")" statement ;
 // forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
+// returnStmt     → "return" expression? ";" ;
 // block          → "{" declaration* "}" ;
 // expression     → assignment ;
 // assignment     → IDENTIFIER "=" assignment | logic_or;
@@ -143,7 +144,7 @@ func (p *parser) varDecl() (ast.Stmt, error) {
 	return decl, nil
 }
 
-// statement → exprStmt | printStmt | ifStmt | whileStmt | block ;
+// statement → exprStmt | printStmt | ifStmt | whileStmt | forStmt | returnStmt | block ;
 func (p *parser) statement() (ast.Stmt, error) {
 	if p.match(ast.PRINT_TOK) {
 		return p.printStatement()
@@ -156,6 +157,9 @@ func (p *parser) statement() (ast.Stmt, error) {
 	}
 	if p.match(ast.FOR_TOK) {
 		return p.forStmt()
+	}
+	if p.match(ast.RETURN_TOK) {
+		return p.returnStmt()
 	}
 	if p.match(ast.LEFT_BRACE) {
 		stmts, err := p.block()
@@ -297,6 +301,23 @@ func (p *parser) forStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewBlock(desugared), nil
+}
+
+// returnStmt → "return" expression? ";" ;
+func (p *parser) returnStmt() (ast.Stmt, error) {
+	keyword := p.previous()
+	if p.match(ast.SEMICOLON) {
+		return ast.NewReturnEmpty(keyword), nil
+	}
+	expr, err := p.expression()
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	_, err = p.consume(ast.SEMICOLON, "expected ';' after return statement")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	return ast.NewReturn(keyword, expr), nil
 }
 
 // block → "{" declaration* "}" ;
@@ -536,7 +557,7 @@ func (p *parser) synchronize() {
 		}
 		switch p.peek().Kind {
 		case ast.CLASS, ast.FUN_TOK, ast.VAR_TOK, ast.FOR_TOK,
-			ast.IF_TOK, ast.WHILE_TOK, ast.PRINT_TOK, ast.RETURN:
+			ast.IF_TOK, ast.WHILE_TOK, ast.PRINT_TOK, ast.RETURN_TOK:
 			return
 		}
 		p.advance()

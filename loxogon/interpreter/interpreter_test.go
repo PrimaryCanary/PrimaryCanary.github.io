@@ -203,7 +203,22 @@ sayHi("Dear", "Reader");`,
 			wantStdout: "Hi, Dear Reader!\n",
 			wantErr:    nil,
 		},
+		{
+			name:       "Fibonnacci",
+			source:     "fun fib(n) { if (n <= 1) return n; return fib(n-1) + fib(n-2); } fib(10);",
+			wantResult: float64(55),
+			wantStdout: "",
+			wantErr:    nil,
+		},
+		{
+			name:       "Recursive countdown",
+			source:     "fun countdown(from, to) { if (from < to) return; print from; countdown(from - 1, to); } countdown(10, 5);",
+			wantResult: nil,
+			wantStdout: "10\n9\n8\n7\n6\n5\n",
+			wantErr:    nil,
+		},
 	}
+	// TODO add tests with errors
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {

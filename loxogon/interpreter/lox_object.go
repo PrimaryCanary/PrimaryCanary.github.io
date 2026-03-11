@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"errors"
 	"fmt"
 	"loxogon/ast"
 	"time"
@@ -26,11 +27,21 @@ func (lf LoxFunction) Call(i *Interpreter, args []LoxObject) (LoxObject, error) 
 	}
 	prev := i.env
 	i.env = funcEnv
+	defer func() { i.env = prev }()
+
 	err := i.EvaluateStmt(lf.Decl.Stmts[0])
 	if err != nil {
-		return LoxObject{}, err
+		// Handle return statement smuggled through error bubbling
+		retErr := ReturnError{}
+		if errors.As(err, &retErr) {
+			if retErr.returnValue != nil {
+				return *retErr.returnValue, nil
+			}
+			return LoxObject{}, nil
+		} else {
+			return LoxObject{}, err
+		}
 	}
-	i.env = prev
 	return LoxObject{}, nil
 }
 

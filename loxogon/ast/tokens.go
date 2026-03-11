@@ -44,7 +44,7 @@ const (
 	NIL
 	OR
 	PRINT_TOK
-	RETURN
+	RETURN_TOK
 	SUPER
 	THIS
 	TRUE
@@ -115,7 +115,7 @@ var keywords = map[string]TokenKind{
 	"nil":    NIL,
 	"or":     OR,
 	"print":  PRINT_TOK,
-	"return": RETURN,
+	"return": RETURN_TOK,
 	"super":  SUPER,
 	"this":   THIS,
 	"true":   TRUE,

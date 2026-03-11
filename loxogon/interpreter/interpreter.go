@@ -265,6 +265,18 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
 		fn := LoxFunction{Decl: stmt}
 		i.env.Define(stmt.Tokens[0].Lexeme, LoxObject{fn})
 		return nil
+	case ast.RETURN_EMPTY:
+		// Hijack error handling to return control flow to the caller
+		// It's hacky and I hate it buuuuuuut....
+		return ReturnError{returnValue: nil}
+	case ast.RETURN:
+		value, err := i.Evaluate(stmt.Child)
+		if err != nil {
+			return err
+		}
+		// Hijack error handling to return control flow to the caller
+		// It's hacky and I hate it buuuuuuut....
+		return ReturnError{returnValue: &value}
 	}
 
 	// Unreachable
@@ -336,4 +348,12 @@ type RuntimeError struct {
 
 func (re RuntimeError) Error() string {
 	return fmt.Sprintf("[line %v at '%v'] Runtime error: %v", re.tok.Line, re.tok.Lexeme, re.message)
+}
+
+type ReturnError struct {
+	returnValue *LoxObject
+}
+
+func (r ReturnError) Error() string {
+	return ""
 }

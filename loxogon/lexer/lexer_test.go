@@ -123,7 +123,7 @@ func TestLexer(t *testing.T) {
 				{ast.NIL, ""},
 				{ast.OR, ""},
 				{ast.PRINT_TOK, ""},
-				{ast.RETURN, ""},
+				{ast.RETURN_TOK, ""},
 				{ast.SUPER, ""},
 				{ast.THIS, ""},
 				{ast.TRUE, ""},
