@@ -191,6 +191,18 @@ for (var b = 1; a < 10000; b = temp + b) {
 			wantStdout: "1\n2\n3\n",
 			wantErr:    nil,
 		},
+		{
+			name: "sayHi function declaration",
+			source: `
+fun sayHi(first, last) {
+  print "Hi, " + first + " " + last + "!";
+}
+
+sayHi("Dear", "Reader");`,
+			wantResult: nil,
+			wantStdout: "Hi, Dear Reader!\n",
+			wantErr:    nil,
+		},
 	}
 	for _, tt := range tests {
 
