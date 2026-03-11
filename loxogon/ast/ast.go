@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -16,6 +17,7 @@ const (
 	GROUPING
 	VARIABLE
 	ASSIGN
+	CALL
 )
 const (
 	EXPR StmtKind = iota
@@ -44,6 +46,13 @@ type Stmt struct {
 	Stmts []Stmt
 }
 
+// TODO see if unified struct repr works
+//	type TestCombinedStmtExpr struct {
+//		Kind  StmtKind
+//		Name  Token
+//		Data  any
+//		Stmts []Stmt
+//	}
 
 func NewLiteral(data any) Expr {
 	return Expr{Kind: LITERAL, Data: data}
@@ -71,6 +80,11 @@ func NewVariable(name Token) Expr {
 
 func NewAssign(name Token, e Expr) Expr {
 	return Expr{Kind: ASSIGN, Tok: name, Children: []Expr{e}}
+}
+
+func NewCall(callee Expr, paren Token, args []Expr) Expr {
+	children := slices.Concat([]Expr{callee}, args)
+	return Expr{Kind: CALL, Tok: paren, Children: children}
 }
 
 func NewExprStmt(e Expr) Stmt {

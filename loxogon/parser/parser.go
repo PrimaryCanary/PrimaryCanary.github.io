@@ -38,7 +38,9 @@ type ParseError struct {
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
 // factor         → unary ( ( "/" | "*" ) unary )* ;
-// unary          → ( "!" | "-" ) unary | primary ;
+// unary          → ( "!" | "-" ) unary | call ;
+// call           → primary ( "(" arguments? ")" )* ;
+// arguments      → expression ( "," expression )* ;
 // primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
 func Parse(toks []ast.Token) ([]ast.Stmt, error) {
 	p := parser{toks: toks, current: 0}
@@ -373,7 +375,7 @@ func (p *parser) factor() (ast.Expr, error) {
 	return p.leftAssocBinaryExpr(p.unary, ast.NewBinary, ast.STAR, ast.SLASH)
 }
 
-// unary → ( "!" | "-" ) unary | primary
+// unary → ( "!" | "-" ) unary | call ;
 func (p *parser) unary() (ast.Expr, error) {
 	if p.match(ast.BANG, ast.MINUS) {
 		operator := p.previous()
@@ -383,7 +385,51 @@ func (p *parser) unary() (ast.Expr, error) {
 		}
 		return ast.NewUnary(operator, right), nil
 	}
-	return p.primary()
+	return p.call()
+}
+
+// call → primary ( "(" arguments? ")" )* ;
+func (p *parser) call() (ast.Expr, error) {
+	expr, err := p.primary()
+	if err != nil {
+		return ast.Expr{}, err
+	}
+
+	// Loop to handle funcName()()()...
+	for {
+		if p.match(ast.LEFT_PAREN) {
+			expr, err = p.arguments(expr)
+			if err != nil {
+				return ast.Expr{}, err
+			}
+		} else {
+			break
+		}
+	}
+	return expr, nil
+}
+
+// arguments → expression ( "," expression )* ;
+func (p *parser) arguments(callee ast.Expr) (ast.Expr, error) {
+	args := make([]ast.Expr, 0)
+	if !p.check(ast.RIGHT_PAREN) {
+		for doWhile := true; doWhile; doWhile = p.match(ast.COMMA) {
+			if len(args) >= 255 {
+				return ast.Expr{}, ParseError{p.peek(), "can't have more than 255 function arguments"}
+			}
+			expr, err := p.expression()
+			if err != nil {
+				return ast.Expr{}, err
+			}
+			args = append(args, expr)
+		}
+	}
+
+	paren, err := p.consume(ast.RIGHT_PAREN, "expected ')' after function arguments")
+	if err != nil {
+		return ast.Expr{}, err
+	}
+	return ast.NewCall(callee, paren, args), nil
 }
 
 // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;

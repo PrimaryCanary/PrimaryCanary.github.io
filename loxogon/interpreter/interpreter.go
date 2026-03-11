@@ -11,14 +11,20 @@ type Interpreter struct {
 	env      environment
 	output   io.Writer
 	LastExpr LoxObject
+	globals  environment
 }
 
 func New() Interpreter {
-	return Interpreter{NewEnv(), os.Stdout, LoxObject{}}
+	globals := NewEnv()
+	globals.Define("clock", LoxObject{Value: nativeClock{}})
+	i := Interpreter{globals, os.Stdout, LoxObject{}, globals}
+	return i
 }
 
 func NewWithWriter(w io.Writer) Interpreter {
-	return Interpreter{NewEnv(), w, LoxObject{}}
+	i := New()
+	i.output = w
+	return i
 }
 
 func (i *Interpreter) Evaluate(expr ast.Expr) (LoxObject, error) {
@@ -154,6 +160,28 @@ func (i *Interpreter) Evaluate(expr ast.Expr) (LoxObject, error) {
 		case ast.BANG_EQUAL:
 			return LoxObject{Value: !isEqual(left, right)}, nil
 		}
+	case ast.CALL:
+		callee, err := i.Evaluate(expr.Children[0])
+		if err != nil {
+			return LoxObject{}, err
+		}
+		args := make([]LoxObject, 0, len(expr.Children)-1)
+		for _, arg := range expr.Children[1:] {
+			a, err := i.Evaluate(arg)
+			if err != nil {
+				return LoxObject{}, err
+			}
+			args = append(args, a)
+		}
+		fn, ok := callee.Value.(Callable)
+		if !ok {
+			return LoxObject{}, RuntimeError{expr.Tok, "can only call functions and classes"}
+		}
+		if arity, n := fn.Arity(), len(args); arity != n {
+			str := fmt.Sprintf("expected %v arguments but got %v", arity, n)
+			return LoxObject{}, RuntimeError{expr.Tok, str}
+		}
+		return fn.Call(i, args)
 	}
 
 	// Unreachable
@@ -303,5 +331,5 @@ type RuntimeError struct {
 }
 
 func (re RuntimeError) Error() string {
-	return fmt.Sprintf("[line %v] Runtime error: %v", re.tok.Line, re.message)
+	return fmt.Sprintf("[line %v at '%v'] Runtime error: %v", re.tok.Line, re.tok.Lexeme, re.message)
 }
