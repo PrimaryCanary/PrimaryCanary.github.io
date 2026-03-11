@@ -184,6 +184,13 @@ for (var b = 1; a < 10000; b = temp + b) {
 				"144\n233\n377\n610\n987\n1597\n2584\n4181\n6765\n",
 			wantErr: nil,
 		},
+		{
+			name:       "Recursive function declaration and call",
+			source:     "fun count(n) { if (n > 1) {count(n-1);} print n; } count(3);",
+			wantResult: nil,
+			wantStdout: "1\n2\n3\n",
+			wantErr:    nil,
+		},
 	}
 	for _, tt := range tests {
 

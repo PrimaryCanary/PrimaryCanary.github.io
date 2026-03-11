@@ -20,7 +20,10 @@ type ParseError struct {
 // Lox ENBF grammar:
 //
 // program        → declaration* EOF ;
-// declaration    → varDecl | statement ;
+// declaration    → funDecl | varDecl | statement ;
+// funDecl        → "fun" function ;
+// function       → IDENTIFIER "(" parameters? ")" block ;
+// parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
 // varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 // program        → statement* EOF ;
 // statement      → exprStmt | printStmt | ifStmt | whileStmt | forStmt | block ;
@@ -55,8 +58,11 @@ func Parse(toks []ast.Token) ([]ast.Stmt, error) {
 	return statements, nil
 }
 
-// declaration → varDecl | statement ;
+// declaration → funDecl | varDecl | statement ;
 func (p *parser) declaration() (ast.Stmt, error) {
+	if p.match(ast.FUN_TOK) {
+		return p.function("function")
+	}
 	if p.match(ast.VAR_TOK) {
 		stmt, err := p.varDecl()
 		if err != nil {
@@ -72,6 +78,44 @@ func (p *parser) declaration() (ast.Stmt, error) {
 		return ast.Stmt{}, err
 	}
 	return stmt, nil
+}
+
+// function → IDENTIFIER "(" parameters? ")" block ;
+func (p *parser) function(kind string) (ast.Stmt, error) {
+	name, err := p.consume(ast.IDENTIFIER, "expected "+kind+" name")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	_, err = p.consume(ast.LEFT_PAREN, "expected '(' after "+kind+" name")
+
+	params := make([]ast.Token, 0)
+	if !p.check(ast.RIGHT_PAREN) {
+		for doWhile := true; doWhile; doWhile = p.match(ast.COMMA) {
+			if len(params) >= 255 {
+				return ast.Stmt{}, ParseError{p.peek(), "can't have more than 255 parameters"}
+			}
+
+			p, err := p.consume(ast.IDENTIFIER, "expected parameter name")
+			if err != nil {
+				return ast.Stmt{}, err
+			}
+			params = append(params, p)
+
+		}
+	}
+	_, err = p.consume(ast.RIGHT_PAREN, "expected ')' after parameters")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	_, err = p.consume(ast.LEFT_BRACE, "expected '{' before "+kind+" body")
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	body, err := p.block()
+	if err != nil {
+		return ast.Stmt{}, err
+	}
+	return ast.NewFun(name, params, body), nil
 }
 
 // varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
@@ -491,7 +535,7 @@ func (p *parser) synchronize() {
 			return
 		}
 		switch p.peek().Kind {
-		case ast.CLASS, ast.FUN, ast.VAR_TOK, ast.FOR_TOK,
+		case ast.CLASS, ast.FUN_TOK, ast.VAR_TOK, ast.FOR_TOK,
 			ast.IF_TOK, ast.WHILE_TOK, ast.PRINT_TOK, ast.RETURN:
 			return
 		}

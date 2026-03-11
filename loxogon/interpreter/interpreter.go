@@ -210,14 +210,14 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
 		return nil
 	case ast.VAR_UNINIT:
 		// TODO runtime error on uninitialized values
-		i.env.Define(stmt.Name.Lexeme, LoxObject{})
+		i.env.Define(stmt.Tokens[0].Lexeme, LoxObject{})
 		return nil
 	case ast.VAR:
 		value, err := i.Evaluate(stmt.Child)
 		if err != nil {
 			return err
 		}
-		i.env.Define(stmt.Name.Lexeme, value)
+		i.env.Define(stmt.Tokens[0].Lexeme, value)
 		return nil
 	case ast.BLOCK:
 		outerScope := i.env
@@ -261,6 +261,10 @@ func (i *Interpreter) EvaluateStmt(stmt ast.Stmt) error {
 				return nil
 			}
 		}
+	case ast.FUN:
+		fn := LoxFunction{Decl: stmt}
+		i.env.Define(stmt.Tokens[0].Lexeme, LoxObject{fn})
+		return nil
 	}
 
 	// Unreachable

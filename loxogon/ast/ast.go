@@ -27,6 +27,7 @@ const (
 	IF
 	WHILE
 	FOR
+	FUN
 	BLOCK
 )
 
@@ -40,10 +41,10 @@ type Expr struct {
 
 // Fat struct representation of expressions
 type Stmt struct {
-	Kind  StmtKind
-	Name  Token
-	Child Expr
-	Stmts []Stmt
+	Kind   StmtKind
+	Tokens []Token
+	Child  Expr
+	Stmts  []Stmt
 }
 
 // TODO see if unified struct repr works
@@ -110,15 +111,21 @@ func NewWhile(condition Expr, body Stmt) Stmt {
 	return Stmt{Kind: WHILE, Child: condition, Stmts: []Stmt{body}}
 }
 
+func NewFun(name Token, params []Token, body []Stmt) Stmt {
+	toks := slices.Concat([]Token{name}, params)
+	b := NewBlock(body)
+	return Stmt{Kind: FUN, Tokens: toks, Stmts: []Stmt{b}}
+}
+
 func NewBlock(stmts []Stmt) Stmt {
 	return Stmt{Kind: BLOCK, Stmts: stmts}
 }
 func NewVarDecl(name Token, e Expr) Stmt {
-	return Stmt{Kind: VAR, Name: name, Child: e}
+	return Stmt{Kind: VAR, Tokens: []Token{name}, Child: e}
 }
 
 func NewVarDeclUninit(name Token) Stmt {
-	return Stmt{Kind: VAR_UNINIT, Name: name}
+	return Stmt{Kind: VAR_UNINIT, Tokens: []Token{name}}
 }
 
 func (e Expr) String() string {
@@ -147,9 +154,9 @@ func (s Stmt) String() string {
 	case PRINT:
 		return fmt.Sprintf("(print %v)", s.Child)
 	case VAR:
-		return fmt.Sprintf("(var %v=%v)", s.Name.Lexeme, s.Child)
+		return fmt.Sprintf("(var %v=%v)", s.Tokens[0].Lexeme, s.Child)
 	case VAR_UNINIT:
-		return fmt.Sprintf("(var %v)", s.Name.Lexeme)
+		return fmt.Sprintf("(var %v)", s.Tokens[0].Lexeme)
 	case BLOCK:
 		return fmt.Sprintf("{%v}", StmtsToString(s.Stmts))
 	}
