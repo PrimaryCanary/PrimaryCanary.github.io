@@ -82,11 +82,34 @@ print (10 - 3) / 5;`,
 
 print fib(10);`,
 
-    loop: `var i = 0;
-while (i < 5) {
-  print i;
-  i = i + 1;
-}`,
+    leibniz: `// Implements the Leibniz formula for π
+// https://en.wikipedia.org/wiki/Leibniz_formula_for_%CF%80
+fun getPi(n) {
+  var quarterPi = 0;
+  for (var i = 0; i < n; i = i + 1) {
+    quarterPi = quarterPi + getTerm(i);
+  }
+  return quarterPi * 4;
+}
+
+fun getTerm(n) {
+  var sign = 1;
+  for (var i = 0; i < n; i = i + 1) {
+    sign = sign * -1;
+  }
+  return sign / ((2 * n) + 1);
+}
+
+getPi(1000);`,
+    hof: `fun applyTwice(func, n) {
+  return func(func(n));
+}
+
+fun addOne(n) {
+  return n+1;
+}
+
+applyTwice(addOne, 5);`,
 };
 
 function loadExample() {
