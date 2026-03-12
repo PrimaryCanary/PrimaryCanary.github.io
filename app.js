@@ -24,6 +24,8 @@ async function runCode() {
 
     try {
         output.textContent = "Running...\n";
+        // ????????, wait for DOM update I think
+        await sleep(10);
         const result = await window.runLox(src);
         output.textContent = "";
         if (result.stdout) {
@@ -33,11 +35,18 @@ async function runCode() {
             // console.log(result.exitCode);
             output.textContent = result.error;
         } else {
-            output.textContent += "last expression: " + result.result;
+            output.textContent += "last expression: " + result.lastExpr;
         }
     } catch (err) {
         output.textContent = err;
     }
+}
+async function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
 }
 
 function share() {
