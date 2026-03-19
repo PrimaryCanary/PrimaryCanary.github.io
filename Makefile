@@ -16,8 +16,7 @@ loxogon:
 
 .PHONY: loxogon-wasm
 loxogon-wasm:
-	$(PWSH) '$$env:GOOS="js"; $$env:GOARCH="wasm"; go build -C loxogon/cmd/wasm -o loxogon.wasm'
-	cp loxogon/cmd/wasm/loxogon.wasm playground/
+	$(PWSH) '$$env:GOOS="js"; $$env:GOARCH="wasm"; go build -C loxogon/cmd/wasm $(GOFLAGS) -o ../../../playground/loxogon.wasm'
 
 .PHONY: test
 test:
