@@ -195,6 +195,14 @@ input[type="checkbox"] {
     display: flex;
     justify-content: flex-end;
 }
+#deleteBtn {
+    background: #d94a4a;
+    color: #fff;
+    white-space: nowrap;
+    margin: 0px 8px 0px 0px;
+}
+#deleteBtn:hover { background: #c03a3a; }
+
 #downloadBtn {
     background: #2eaa5c;
     color: #fff;

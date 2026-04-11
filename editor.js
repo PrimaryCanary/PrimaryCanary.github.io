@@ -243,5 +243,20 @@ searchInput.addEventListener("keydown", (e) => {
     }
 });
 
+function deleteObject() {
+    if (currentIndex === null) return;
+    if (!confirm(`Delete "${data[currentIndex].string}"?`)) return;
+    data.splice(currentIndex, 1);
+    currentIndex = null;
+    searchInput.value = "";
+    resultsDiv.innerHTML = "";
+    if (data.length > 0) {
+        loadObject(0);
+    } else {
+        editorDiv.style.display = "none";
+    }
+}
+
 document.getElementById("downloadBtn").onclick = downloadData;
+document.getElementById("deleteBtn").onclick = deleteObject;
 document.getElementById("addBtn").onclick = addNew;
