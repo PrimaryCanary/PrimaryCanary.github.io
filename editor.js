@@ -1,7 +1,6 @@
 const searchInput = document.getElementById("search");
 const resultsDiv = document.getElementById("results");
 const editorDiv = document.getElementById("editor");
-const currentNameEl = document.getElementById("current-name");
 
 const fString = document.getElementById("field-string");
 const fFlagged = document.getElementById("field-flagged");
@@ -9,32 +8,47 @@ const fLink = document.getElementById("field-link");
 const fNotes = document.getElementById("field-notes");
 
 let currentIndex = null;
+let currentResults = [];
+let highlightedIndex = 0;
 
 function renderResults(query) {
     resultsDiv.innerHTML = "";
-    if (!query) return;
+    highlightedIndex = 0;
+    if (!query) {
+        currentResults = [];
+        return;
+    }
 
-    data
+    currentResults = data
         .map((obj, i) => ({ ...obj, i }))
         .filter((obj) => obj.string.toLowerCase().includes(query.toLowerCase()))
-        .slice(0, 5)
-        .forEach((obj) => {
-            const div = document.createElement("div");
-            div.textContent = obj.string;
-            if (obj.i === currentIndex) div.classList.add("selected");
-            div.onclick = () => loadObject(obj.i);
-            div.addEventListener(
-                "click",
-                (event) => selectResult(obj.i),
-            );
-            resultsDiv.appendChild(div);
-        });
+        .slice(0, 5);
+
+    currentResults.forEach((obj, idx) => {
+        const div = document.createElement("div");
+        div.textContent = obj.string;
+        div.addEventListener("click", () => selectResult(idx));
+        resultsDiv.appendChild(div);
+    });
+
+    updateHighlight();
 }
 
-function selectResult(result) {
+function selectResult(idx) {
+    const obj = currentResults[idx];
+    if (!obj) return;
+    loadObject(obj.i);
     resultsDiv.innerHTML = "";
-    // TODO
-    // searchInput = result.innerHTML;
+    searchInput.value = obj.string;
+    currentResults = [];
+    fString.focus();
+    fString.selectionStart = fString.value.length;
+}
+
+function updateHighlight() {
+    Array.from(resultsDiv.children).forEach((child, idx) => {
+        child.classList.toggle("highlight", idx === highlightedIndex);
+    });
 }
 
 function loadObject(index) {
@@ -43,7 +57,6 @@ function loadObject(index) {
     const obj = data[index];
     editorDiv.style.display = "block";
 
-    currentNameEl.textContent = obj.string || "(unnamed)";
     fString.value = obj.string;
     fFlagged.checked = obj.flagged;
     fLink.value = obj.link;
@@ -208,6 +221,27 @@ fNotes.addEventListener("keydown", (e) => {
     }
 });
 
-searchInput.addEventListener("input", (e) => renderResults(e.target.value));
+searchInput.addEventListener("input", (e) => {
+    renderResults(e.target.value);
+    updateHighlight();
+});
+
+searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") {
+        highlightedIndex = Math.min(
+            highlightedIndex + 1,
+            currentResults.length - 1,
+        );
+        updateHighlight();
+        e.preventDefault();
+    } else if (e.key === "ArrowUp") {
+        highlightedIndex = Math.max(highlightedIndex - 1, 0);
+        updateHighlight();
+        e.preventDefault();
+    } else if (e.key === "Enter") {
+        if (currentResults.length > 0) selectResult(highlightedIndex);
+    }
+});
+
 document.getElementById("downloadBtn").onclick = downloadData;
 document.getElementById("addBtn").onclick = addNew;
