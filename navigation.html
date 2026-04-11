@@ -17,8 +17,21 @@
     </div>
     <div id="notes"></div>
 
-    <script src="routes.js"></script>
-    <script src="nav.js"></script>
+    <script>
+    fetch('routes.js', { method: 'HEAD' })
+      .then(r => r.headers.get('Last-Modified') || Date.now())
+      .then(v => new Promise(resolve => {
+        const s = document.createElement('script');
+        s.src = 'routes.js?v=' + encodeURIComponent(v);
+        s.onload = resolve;
+        document.body.appendChild(s);
+      }))
+      .then(() => {
+        const s = document.createElement('script');
+        s.src = 'nav.js';
+        document.body.appendChild(s);
+      });
+    </script>
 </body>
 
 </html>
