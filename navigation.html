@@ -17,6 +17,7 @@
     </div>
     <div id="notes"></div>
 
+    <!-- Cache bust routes -->
     <script>
     fetch('routes.js', { method: 'HEAD' })
       .then(r => r.headers.get('Last-Modified') || Date.now())
