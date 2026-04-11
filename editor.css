@@ -1,0 +1,6 @@
+body { font-family: Arial; margin:0; padding:20px; }
+#results div { padding:6px; cursor:pointer; }
+#results div:hover { background:#eee; }
+#editor { margin-top:20px; }
+#field-notes { border:1px solid #ccc; min-height:150px; padding:8px; }
+#toolbar button { margin-right:5px; }
