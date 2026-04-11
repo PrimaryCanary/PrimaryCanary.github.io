@@ -32,7 +32,7 @@ function selectResult(index) {
 
     if (obj.flagged) {
         outputDiv.innerHTML +=
-            `<div class="flagged">This key is flagged. Read the notes for special instructions and double check the route.</div>`;
+            `<div class="flagged-warning">This key is flagged. Read the notes for special instructions and double check the route.</div>`;
     }
 
     notesDiv.innerHTML = obj.notes;
