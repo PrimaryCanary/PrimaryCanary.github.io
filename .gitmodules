@@ -1,0 +1,6 @@
+[submodule "repertoire-popularity"]
+	path = repertoire-popularity
+	url = https://github.com/PrimaryCanary/sort-repertoire-by-popularity
+[submodule "feedliner-nav"]
+	path = feedliner-nav
+	url = https://github.com/PrimaryCanary/feedliner-nav
