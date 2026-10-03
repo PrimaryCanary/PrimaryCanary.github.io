@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+for subtree in repertoire-popularity feedliner-nav; do
+    git subtree pull --squash "--prefix=$subtree" "$subtree" main
+done
