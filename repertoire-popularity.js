@@ -1,88 +1,3 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Repertoire Popularity — Lichess Explorer</title><link rel="stylesheet" href="repertoire-popularity.css"></head><body><header class="hero">
-<div class="eyebrow">LICHESS OPENING EXPLORER</div>
-<h1>Repertoire Popularity</h1>
-<p class="help">
-Load a repertoire PGN. The app extracts the repertoire lines, truncates each line after the requested number of moves,
-and ranks those positions by the number of Lichess games reaching them.
-</p>
-</header>
-
-<section class="card auth">
-  <div><b>Lichess account</b> <span id="authStatus" class="muted">Not logged in</span></div>
-  <div>
-    <button id="login">Log in with Lichess</button>
-    <button id="logout" hidden>Log out</button>
-  </div>
-</section>
-
-<section class="card controls">
-  <div>
-    <label><b>Repertoire PGN</b></label>
-    <input id="file" type="file" accept=".pgn,.txt">
-    <div id="filename" class="muted"></div>
-  </div>
-
-  <div>
-    <label><b>After how many ply?</b></label>
-    <input id="depth" type="number" min="1" max="200" value="10">
-    <div class="muted">A ply is a half-move e.g. e4 e5 Nf3 is 3 ply.</div>
-  </div>
-
-  <div>
-    <label><b>Number of lines</b></label>
-    <input id="limit" type="number" min="0" value="25">
-    <div class="muted">0 means all lines.</div>
-  </div>
-
-  <fieldset>
-    <legend>Lichess average-rating brackets</legend>
-    <label><input class="rating" type="checkbox" value="0" checked> 0–999</label>
-    <label><input class="rating" type="checkbox" value="1000" checked> 1000–1199</label>
-    <label><input class="rating" type="checkbox" value="1200" checked> 1200–1399</label>
-    <label><input class="rating" type="checkbox" value="1400" checked> 1400–1599</label>
-    <label><input class="rating" type="checkbox" value="1600" checked> 1600–1799</label>
-    <label><input class="rating" type="checkbox" value="1800" checked> 1800–1999</label>
-    <label><input class="rating" type="checkbox" value="2000" checked> 2000–2199</label>
-    <label><input class="rating" type="checkbox" value="2200" checked> 2200–2499</label>
-    <label><input class="rating" type="checkbox" value="2500" checked> 2500+</label>
-  </fieldset>
-
-  <fieldset>
-    <legend>Time controls</legend>
-    <label><input class="speed" type="checkbox" value="ultraBullet"> Ultrabullet</label>
-    <label><input class="speed" type="checkbox" value="bullet"> Bullet</label>
-    <label><input class="speed" type="checkbox" value="blitz" checked> Blitz</label>
-    <label><input class="speed" type="checkbox" value="rapid" checked> Rapid</label>
-    <label><input class="speed" type="checkbox" value="classical" checked> Classical</label>
-    <label><input class="speed" type="checkbox" value="correspondence"> Correspondence</label>
-  </fieldset>
-
-  <div>
-    <button id="run">Analyze repertoire</button>
-    <p class="muted">Only one Explorer request is made at a time.</p>
-  </div>
-</section>
-
-<section class="results-section">
-<div id="status"></div>
-<div class="progress"><div id="bar"></div></div>
-<div id="results"></div>
-</section>
-
-<details class="card methodology">
-<summary>How the ranking works</summary>
-<p>
-Each repertoire line is truncated after the requested number of moves. The resulting position is
-queried against the Lichess Opening Explorer, and lines are ranked by the number of games reaching
-that position under the selected rating/time-control filters.
-</p>
-<p>
-For example, with <b>10</b> moves selected, the app scores the position after the tenth individual
-move in each repertoire line.
-</p>
-</details>
-
-<script type="module">
 import { Chess } from "https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm";
 
 const API = "https://explorer.lichess.ovh/lichess";
@@ -113,13 +28,18 @@ function randomString(length = 64) {
 }
 
 async function pkceChallenge(verifier) {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(verifier),
+  );
   return base64url(new Uint8Array(digest));
 }
 
 function redirectUri() {
   if (location.protocol === "file:") {
-    throw new Error("OAuth login requires the app to be served over HTTP. Run: python -m http.server 8000");
+    throw new Error(
+      "OAuth login requires the app to be served over HTTP. Run: python -m http.server 8000",
+    );
   }
   return location.origin + location.pathname;
 }
@@ -137,7 +57,7 @@ async function login() {
     redirect_uri: redirectUri(),
     code_challenge_method: "S256",
     code_challenge: challenge,
-    state
+    state,
   });
   location.assign(OAUTH_AUTHORIZE + "?" + params);
 }
@@ -160,16 +80,20 @@ async function finishOAuth() {
     code,
     redirect_uri: redirectUri(),
     client_id: CLIENT_ID,
-    code_verifier: verifier
+    code_verifier: verifier,
   });
   const response = await fetch(OAUTH_TOKEN, {
     method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
   });
-  if (!response.ok) throw new Error(`Lichess token request failed: HTTP ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`Lichess token request failed: HTTP ${response.status}`);
+  }
   const token = await response.json();
-  if (!token.access_token) throw new Error("Lichess did not return an access token.");
+  if (!token.access_token) {
+    throw new Error("Lichess did not return an access token.");
+  }
 
   accessToken = token.access_token;
   localStorage.setItem(TOKEN_KEY, accessToken);
@@ -186,7 +110,7 @@ async function updateAuthStatus() {
     return;
   }
   const response = await fetch("https://lichess.org/api/account", {
-    headers: {Authorization: `Bearer ${accessToken}`}
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!response.ok) {
     accessToken = null;
@@ -205,7 +129,10 @@ async function updateAuthStatus() {
 async function logout() {
   if (accessToken) {
     try {
-      await fetch(OAUTH_REVOKE, {method: "DELETE", headers: {Authorization: `Bearer ${accessToken}`}});
+      await fetch(OAUTH_REVOKE, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
     } catch {}
   }
   accessToken = null;
@@ -221,12 +148,14 @@ const bar = document.querySelector("#bar");
 
 let pgnText = "";
 
-loginButton.addEventListener("click", () => login().catch(e => {
-  statusEl.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
-}));
-logoutButton.addEventListener("click", () => logout().catch(e => {
-  statusEl.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
-}));
+loginButton.addEventListener("click", () =>
+  login().catch((e) => {
+    statusEl.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
+  }));
+logoutButton.addEventListener("click", () =>
+  logout().catch((e) => {
+    statusEl.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`;
+  }));
 
 (async () => {
   try {
@@ -250,7 +179,7 @@ fileInput.addEventListener("change", async () => {
   statusEl.textContent = "PGN loaded.";
 });
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function cloneChess(c) {
   return new Chess(c.fen());
@@ -258,9 +187,10 @@ function cloneChess(c) {
 
 function tokenizeMovetext(s) {
   s = s.replace(/\{[^}]*\}/gs, " ")
-       .replace(/;[^\n]*/g, " ")
-       .replace(/\$\d+/g, " ");
-  return s.match(/\(|\)|1-0|0-1|1\/2-1\/2|\*|(?:\d+\.(?:\.\.)?)|[^\s()]+/g) || [];
+    .replace(/;[^\n]*/g, " ")
+    .replace(/\$\d+/g, " ");
+  return s.match(/\(|\)|1-0|0-1|1\/2-1\/2|\*|(?:\d+\.(?:\.\.)?)|[^\s()]+/g) ||
+    [];
 }
 
 function parseGameMovetext(movetext) {
@@ -280,7 +210,7 @@ function parseGameMovetext(movetext) {
 
   const addLeaf = () => {
     const key = path.join(" ");
-    if (key) leaves.set(key, { uci:[...path], san:[...sans] });
+    if (key) leaves.set(key, { uci: [...path], san: [...sans] });
   };
 
   for (const tok of tokenizeMovetext(movetext)) {
@@ -318,8 +248,10 @@ function parseGameMovetext(movetext) {
       continue;
     }
 
-    if (/^(?:\d+\.(?:\.\.)?)$/.test(tok) ||
-        /^(?:1-0|0-1|1\/2-1\/2|\*)$/.test(tok)) continue;
+    if (
+      /^(?:\d+\.(?:\.\.)?)$/.test(tok) ||
+      /^(?:1-0|0-1|1\/2-1\/2|\*)$/.test(tok)
+    ) continue;
 
     try {
       const before = cloneChess(board);
@@ -349,7 +281,9 @@ function splitGames(pgn) {
   let m;
   while ((m = re.exec(pgn))) starts.push(m.index);
   if (!starts.length) return [pgn];
-  return starts.map((start, i) => pgn.slice(start, starts[i + 1] ?? pgn.length));
+  return starts.map((start, i) =>
+    pgn.slice(start, starts[i + 1] ?? pgn.length)
+  );
 }
 
 function getMovetext(game) {
@@ -360,7 +294,7 @@ function parseRepertoire(pgn, depth) {
   const allLeaves = new Map();
 
   for (const game of splitGames(pgn)) {
-    const {leaves} = parseGameMovetext(getMovetext(game));
+    const { leaves } = parseGameMovetext(getMovetext(game));
     for (const [k, line] of leaves) allLeaves.set(k, line);
   }
 
@@ -382,7 +316,7 @@ function parseRepertoire(pgn, depth) {
       const move = board.move({
         from: moveUci.slice(0, 2),
         to: moveUci.slice(2, 4),
-        ...(moveUci.length === 5 ? {promotion: moveUci[4]} : {})
+        ...(moveUci.length === 5 ? { promotion: moveUci[4] } : {}),
       });
       san.push(move.san);
     }
@@ -390,7 +324,7 @@ function parseRepertoire(pgn, depth) {
     lines.push({
       uci,
       san,
-      scoreFen: board.fen()
+      scoreFen: board.fen(),
     });
   }
 
@@ -401,8 +335,8 @@ function fmt(n) {
   return n == null ? "—" : n.toLocaleString();
 }
 
-function pct(a,b) {
-  return b ? (100*a/b).toFixed(1) + "%" : "—";
+function pct(a, b) {
+  return b ? (100 * a / b).toFixed(1) + "%" : "—";
 }
 
 async function explorer(fen, ratings, speeds) {
@@ -410,12 +344,12 @@ async function explorer(fen, ratings, speeds) {
     variant: "standard",
     ratings: ratings.join(","),
     speeds: speeds.join(","),
-    fen
+    fen,
   });
 
   for (let attempt = 0; attempt < 3; attempt++) {
     const response = await fetch(API + "?" + params.toString(), {
-      headers: accessToken ? {Authorization: `Bearer ${accessToken}`} : {}
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
 
     if (response.status === 429) {
@@ -424,8 +358,9 @@ async function explorer(fen, ratings, speeds) {
       continue;
     }
 
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(`Lichess returned HTTP ${response.status}`);
+    }
 
     return response.json();
   }
@@ -434,16 +369,20 @@ async function explorer(fen, ratings, speeds) {
 }
 
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  return s.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
   }[c]));
 }
 
-function render(rows, rootGames, depth) {
-  rows.sort((a,b) => b.games - a.games || b.uci.length - a.uci.length);
+function render(rows, depth) {
+  rows.sort((a, b) => b.games - a.games || b.uci.length - a.uci.length);
 
   let limit = Number(document.querySelector("#limit").value);
-  if(limit <= 0 || limit > rows.length) {
+  if (limit <= 0 || limit > rows.length) {
     limit = rows.length;
   }
   const shown = rows.slice(0, limit);
@@ -455,14 +394,14 @@ function render(rows, rootGames, depth) {
       <th class="num">Games after ${depth} ply</th>
       <th class="num">% of most common</th>
     </tr></thead><tbody>`;
-  
+
   const maxGames = Math.max(...shown.map((elem) => elem.games));
-  shown.forEach((r,i) => {
+  shown.forEach((r, i) => {
     html += `<tr>
-      <td>${i+1}</td>
+      <td>${i + 1}</td>
       <td><code>${escapeHtml(r.san.join(" "))}</code></td>
       <td class="num"><b>${fmt(r.games)}</b></td>
-      <td class="num">${pct(maxGames, r.games)}</td>
+      <td class="num">${fmt(r.games / maxGames * 100)}%</td>
     </tr>`;
   });
 
@@ -474,7 +413,8 @@ function render(rows, rootGames, depth) {
 
 runButton.addEventListener("click", async () => {
   if (!accessToken) {
-    statusEl.innerHTML = "<span class='error'>Log in with Lichess before analyzing.</span>";
+    statusEl.innerHTML =
+      "<span class='error'>Log in with Lichess before analyzing.</span>";
     return;
   }
   if (!pgnText) {
@@ -482,9 +422,16 @@ runButton.addEventListener("click", async () => {
     return;
   }
 
-  const ratings = [...document.querySelectorAll(".rating:checked")].map(x => x.value);
-  const speeds = [...document.querySelectorAll(".speed:checked")].map(x => x.value);
-  const depth = Math.max(1, Math.min(200, Number(document.querySelector("#depth").value) || 10));
+  const ratings = [...document.querySelectorAll(".rating:checked")].map((x) =>
+    x.value
+  );
+  const speeds = [...document.querySelectorAll(".speed:checked")].map((x) =>
+    x.value
+  );
+  const depth = Math.max(
+    1,
+    Math.min(200, Number(document.querySelector("#depth").value) || 10),
+  );
 
   if (!ratings.length || !speeds.length) {
     statusEl.innerHTML =
@@ -500,31 +447,35 @@ runButton.addEventListener("click", async () => {
     statusEl.textContent = "Parsing repertoire…";
     const lines = parseRepertoire(pgnText, depth);
 
-    if (!lines.length)
-      throw new Error(`No repertoire lines reach move ${depth}. Try a smaller depth.`);
+    if (!lines.length) {
+      throw new Error(
+        `No repertoire lines reach move ${depth}. Try a smaller depth.`,
+      );
+    }
 
-    const uniqueFens = [...new Set(lines.map(x => x.scoreFen))];
+    const uniqueFens = [...new Set(lines.map((x) => x.scoreFen))];
     const data = new Map();
 
     for (let i = 0; i < uniqueFens.length; i++) {
-      statusEl.textContent =
-        `Querying Lichess: ${i+1}/${uniqueFens.length} positions…`;
+      statusEl.textContent = `Querying Lichess: ${
+        i + 1
+      }/${uniqueFens.length} positions…`;
 
       data.set(
         uniqueFens[i],
-        await explorer(uniqueFens[i], ratings, speeds)
+        await explorer(uniqueFens[i], ratings, speeds),
       );
 
-      bar.style.width = `${((i+1)/uniqueFens.length)*100}%`;
+      bar.style.width = `${((i + 1) / uniqueFens.length) * 100}%`;
       await sleep(120);
     }
 
     statusEl.textContent = "Calculating rankings…";
-    const rows = lines.map(line => {
+    const rows = lines.map((line) => {
       const d = data.get(line.scoreFen);
       return {
         ...line,
-        games: (d.white || 0) + (d.draws || 0) + (d.black || 0)
+        games: (d.white || 0) + (d.draws || 0) + (d.black || 0),
       };
     });
 
@@ -535,10 +486,10 @@ runButton.addEventListener("click", async () => {
       `${uniqueFens.length} unique positions queried.`;
   } catch (e) {
     console.error(e);
-    statusEl.innerHTML =
-      `<span class="error">${escapeHtml(e.message || String(e))}</span>`;
+    statusEl.innerHTML = `<span class="error">${
+      escapeHtml(e.message || String(e))
+    }</span>`;
   } finally {
     runButton.disabled = false;
   }
 });
-</script><script type="module" src="repertoire-popularity.js"></script></body></html>
