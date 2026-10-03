@@ -173,8 +173,6 @@ fileInput.addEventListener("change", async () => {
   const f = fileInput.files[0];
   if (!f) return;
   pgnText = await f.text();
-  document.querySelector("#filename").textContent =
-    `${f.name} (${pgnText.length.toLocaleString()} characters)`;
   resultsEl.innerHTML = "";
   statusEl.textContent = "PGN loaded.";
 });
@@ -336,7 +334,7 @@ function fmt(n) {
 }
 
 function pct(a, b) {
-  return b ? (100 * a / b).toFixed(1) + "%" : "—";
+  return b ? (100 * a / b).toPrecision(3) + "%" : "—";
 }
 
 async function explorer(fen, ratings, speeds) {
@@ -401,12 +399,9 @@ function render(rows, depth) {
       <td>${i + 1}</td>
       <td><code>${escapeHtml(r.san.join(" "))}</code></td>
       <td class="num"><b>${fmt(r.games)}</b></td>
-      <td class="num">${fmt(r.games / maxGames * 100)}%</td>
+      <td class="num">${pct(r.games, maxGames)}</td>
     </tr>`;
   });
-
-  html += `</tbody></table>
-    <p class="muted">Showing ${shown.length} of ${rows.length} repertoire lines.</p>`;
 
   resultsEl.innerHTML = html;
 }

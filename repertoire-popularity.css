@@ -36,26 +36,18 @@ body>* {
 }
 
 .hero {
-    padding: 3.25rem 1rem 1.75rem
-}
-
-.eyebrow {
-    color: var(--accent);
-    font-size: .75rem;
-    font-weight: 750;
-    letter-spacing: .12em;
-    margin-bottom: .45rem
+    padding-bottom: 1rem
 }
 
 h1 {
     margin: 0;
-    font-size: clamp(2rem, 5vw, 3rem);
+    font-size: clamp(1.5rem, 5vw, 2rem);
     line-height: 1.05;
     letter-spacing: -.035em
 }
 
 .help {
-    max-width: 680px;
+    max-width: 780px;
     color: var(--muted);
     font-size: 1.02rem;
     margin: .75rem 0 0
@@ -73,15 +65,15 @@ h1 {
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 1rem 1.15rem;
+    padding: .25rem 1.15rem;
     margin-bottom: 1rem
 }
 
 .controls {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem;
-    padding: 1.35rem
+    gap: .5rem 1.25rem;
+    padding: .75rem 1.35rem
 }
 
 .controls>div,
@@ -134,13 +126,14 @@ input:focus {
 fieldset {
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: .85rem 1rem;
+    padding: .25rem 1rem;
     margin: 0
 }
 
 fieldset label {
     display: inline-flex;
     align-items: center;
+    width: 120px;
     gap: .4rem;
     margin: .25rem .85rem .25rem 0
 }
@@ -197,12 +190,6 @@ button:disabled {
 
 .muted {
     color: var(--muted)
-}
-
-#filename {
-    margin-top: .45rem;
-    overflow: hidden;
-    text-overflow: ellipsis
 }
 
 #status {
@@ -277,21 +264,6 @@ tbody tr:hover {
 
 code {
     font: .9rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
-}
-
-.methodology {
-    padding: 0 1.15rem;
-    margin-bottom: 3rem
-}
-
-.methodology summary {
-    cursor: pointer;
-    padding: 1rem 0;
-    font-weight: 700
-}
-
-.methodology p {
-    color: var(--muted)
 }
 
 .error {
