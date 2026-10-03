@@ -4,3 +4,6 @@
 [submodule "feedliner-nav"]
 	path = feedliner-nav
 	url = https://github.com/PrimaryCanary/feedliner-nav
+[submodule "loxogon"]
+	path = loxogon
+	url = https://github.com/PrimaryCanary/loxogon
